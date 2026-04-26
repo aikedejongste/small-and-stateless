@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lunar Sleep Analysis</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d0d1a; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    function getMoonPhase(date) {
+      const knownNewMoon = new Date(Date.UTC(2000, 0, 6, 18, 14, 0));
+      const synodicMonth = 29.53058867;
+      const daysSinceKnown = (date.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
+      return ((daysSinceKnown % synodicMonth) + synodicMonth) % synodicMonth;
+    }
+
+    function getMoonPhaseName(phase) {
+      const eighth = 29.53058867 / 8;
+      if (phase < eighth) return { name: 'New Moon', emoji: '🌑', category: 'new', shortName: 'New' };
+      if (phase < eighth * 2) return { name: 'Waxing Crescent', emoji: '🌒', category: 'waxing_crescent', shortName: 'Wax Cres' };
+      if (phase < eighth * 3) return { name: 'First Quarter', emoji: '🌓', category: 'first_quarter', shortName: '1st Qtr' };
+      if (phase < eighth * 4) return { name: 'Waxing Gibbous', emoji: '🌔', category: 'waxing_gibbous', shortName: 'Wax Gib' };
+      if (phase < eighth * 5) return { name: 'Full Moon', emoji: '🌕', category: 'full', shortName: 'Full' };
+      if (phase < eighth * 6) return { name: 'Waning Gibbous', emoji: '🌖', category: 'waning_gibbous', shortName: 'Wan Gib' };
+      if (phase < eighth * 7) return { name: 'Last Quarter', emoji: '🌗', category: 'last_quarter', shortName: 'Last Qtr' };
+      return { name: 'Waning Crescent', emoji: '🌘', category: 'waning_crescent', shortName: 'Wan Cres' };
+    }
+
+    function getMoonIllumination(phase) {
+      return (1 - Math.cos((phase / 29.53058867) * 2 * Math.PI)) / 2;
+    }
+
+    function parseDuration(dur) {
+      if (!dur) return 0;
+      const match = dur.match(/(\d+)h\s*(\d+)?min?/);
+      return match ? parseInt(match[1]) + (parseInt(match[2] || 0) / 60) : 0;
+    }
+
+    // 293 nights of sleep data: Feb 2025 - Feb 2026
+    const rawData = `2025-02-04,56,62,Poor,6h 32min
+2025-02-05,55,67,Poor,5h 38min
+2025-02-12,86,63,Good,8h 5min
+2025-02-13,52,66,Poor,5h 59min
+2025-02-15,34,68,Poor,3h 52min
+2025-02-16,73,67,Fair,6h 52min
+2025-02-18,81,62,Good,6h 51min
+2025-02-19,73,64,Fair,6h 17min
+2025-02-21,64,66,Fair,5h 31min
+2025-02-22,71,64,Fair,8h 3min
+2025-02-23,59,70,Poor,4h 54min
+2025-02-25,62,62,Fair,8h 10min
+2025-02-26,74,65,Fair,6h 0min
+2025-03-01,75,64,Fair,7h 21min
+2025-03-04,78,64,Fair,6h 53min
+2025-03-05,75,63,Fair,8h 3min
+2025-03-06,78,60,Fair,6h 52min
+2025-03-08,82,61,Good,7h 57min
+2025-03-10,78,58,Fair,7h 43min
+2025-03-12,45,67,Poor,4h 10min
+2025-03-13,88,59,Good,8h 14min
+2025-03-14,84,58,Good,7h 37min
+2025-03-15,77,60,Fair,7h 26min
+2025-03-16,65,63,Fair,7h 8min
+2025-03-17,55,62,Poor,5h 31min
+2025-03-18,54,64,Poor,5h 35min
+2025-03-19,62,64,Fair,5h 42min
+2025-03-20,64,62,Fair,5h 47min
+2025-03-21,57,65,Poor,5h 46min
+2025-03-22,68,63,Fair,6h 15min
+2025-03-24,52,68,Poor,5h 32min
+2025-03-25,66,68,Fair,5h 50min
+2025-03-26,45,69,Poor,5h 42min
+2025-03-27,50,67,Poor,6h 19min
+2025-03-28,54,69,Poor,5h 48min
+2025-03-29,54,64,Poor,5h 49min
+2025-03-30,64,63,Fair,5h 21min
+2025-03-31,50,63,Poor,5h 52min
+2025-04-01,47,62,Poor,6h 10min
+2025-04-02,59,66,Poor,5h 46min
+2025-04-03,55,67,Poor,6h 11min
+2025-04-04,44,65,Poor,5h 56min
+2025-04-05,58,64,Poor,5h 52min
+2025-04-06,53,63,Poor,6h 2min
+2025-04-07,56,64,Poor,6h 19min
+2025-04-08,59,64,Poor,5h 54min
+2025-04-09,63,61,Fair,7h 0min
+2025-04-10,73,62,Fair,6h 50min
+2025-04-11,55,64,Poor,6h 21min
+2025-04-12,77,64,Fair,7h 16min
+2025-04-13,52,65,Poor,5h 52min
+2025-04-15,52,66,Poor,6h 35min
+2025-04-16,61,64,Fair,6h 3min
+2025-04-17,53,66,Poor,5h 35min
+2025-04-18,48,66,Poor,5h 11min
+2025-04-19,67,63,Fair,6h 33min
+2025-04-20,59,61,Poor,6h 27min
+2025-04-21,79,60,Fair,7h 43min
+2025-04-22,79,59,Fair,6h 59min
+2025-04-23,83,58,Good,8h 36min
+2025-04-24,75,63,Fair,6h 40min
+2025-04-25,76,61,Fair,6h 13min
+2025-04-26,79,60,Fair,8h 9min
+2025-04-27,73,61,Fair,6h 45min
+2025-04-28,74,62,Fair,5h 40min
+2025-04-29,59,61,Poor,6h 27min
+2025-04-30,78,58,Fair,5h 59min
+2025-05-01,75,59,Fair,6h 10min
+2025-05-02,68,59,Fair,5h 16min
+2025-05-03,60,62,Fair,5h 52min
+2025-05-04,68,60,Fair,6h 0min
+2025-05-05,69,59,Fair,7h 13min
+2025-05-06,68,60,Fair,6h 13min
+2025-05-07,71,58,Fair,6h 32min
+2025-05-08,66,59,Fair,6h 9min
+2025-05-09,74,57,Fair,6h 42min
+2025-05-10,67,61,Fair,7h 0min
+2025-05-11,64,60,Fair,6h 51min
+2025-05-13,63,63,Fair,5h 52min
+2025-05-14,56,66,Poor,5h 10min
+2025-05-15,70,61,Fair,6h 8min
+2025-05-16,63,65,Fair,5h 46min
+2025-05-17,64,64,Fair,5h 20min
+2025-05-18,53,66,Poor,5h 49min
+2025-05-19,73,62,Fair,6h 41min
+2025-05-20,65,62,Fair,7h 0min
+2025-05-21,59,65,Poor,6h 11min
+2025-05-22,56,65,Poor,6h 31min
+2025-05-23,65,64,Fair,6h 47min
+2025-05-24,59,64,Poor,6h 0min
+2025-05-25,63,65,Fair,6h 20min
+2025-05-26,49,65,Poor,5h 34min
+2025-05-27,47,68,Poor,6h 12min
+2025-05-28,77,67,Fair,7h 47min
+2025-05-29,66,64,Fair,6h 47min
+2025-05-30,67,61,Fair,7h 38min
+2025-05-31,58,62,Poor,6h 42min
+2025-06-01,52,60,Poor,5h 29min
+2025-06-02,51,60,Poor,6h 2min
+2025-06-03,49,61,Poor,6h 6min
+2025-06-04,60,62,Fair,5h 15min
+2025-06-05,46,65,Poor,5h 9min
+2025-06-06,61,62,Fair,4h 50min
+2025-06-07,72,63,Fair,7h 3min
+2025-06-08,45,65,Poor,5h 46min
+2025-06-09,43,59,Poor,4h 13min
+2025-06-10,39,66,Poor,4h 7min
+2025-06-11,54,61,Poor,8h 6min
+2025-06-12,60,67,Fair,5h 2min
+2025-06-13,55,63,Poor,4h 31min
+2025-06-14,49,64,Poor,7h 9min
+2025-06-15,50,66,Poor,6h 42min
+2025-06-16,44,65,Poor,5h 20min
+2025-06-17,68,63,Fair,6h 7min
+2025-06-18,58,61,Poor,6h 39min
+2025-06-19,56,62,Poor,5h 58min
+2025-06-20,66,60,Fair,5h 36min
+2025-06-21,64,59,Fair,5h 45min
+2025-06-22,46,63,Poor,5h 52min
+2025-06-23,59,63,Poor,7h 36min
+2025-06-24,49,63,Poor,5h 27min
+2025-06-25,63,61,Fair,6h 29min
+2025-06-26,49,66,Poor,6h 34min
+2025-06-27,69,64,Fair,6h 58min
+2025-06-28,70,60,Fair,7h 8min
+2025-06-29,49,62,Poor,6h 23min
+2025-06-30,47,63,Poor,5h 12min
+2025-07-08,57,63,Poor,4h 6min
+2025-07-09,84,59,Good,7h 43min
+2025-07-10,83,62,Good,7h 15min
+2025-07-11,76,59,Fair,7h 10min
+2025-07-13,63,65,Fair,5h 39min
+2025-07-14,76,61,Fair,6h 31min
+2025-07-15,53,63,Poor,7h 13min
+2025-07-17,65,61,Fair,6h 34min
+2025-07-18,73,61,Fair,6h 40min
+2025-07-19,56,63,Poor,5h 36min
+2025-07-20,39,67,Poor,5h 54min
+2025-07-22,51,63,Poor,4h 47min
+2025-07-23,41,65,Poor,5h 18min
+2025-07-24,35,68,Poor,6h 11min
+2025-07-25,61,65,Fair,7h 0min
+2025-07-26,38,69,Poor,5h 54min
+2025-07-27,50,68,Poor,6h 8min
+2025-07-28,50,63,Poor,6h 29min
+2025-07-29,43,63,Poor,5h 38min
+2025-07-30,48,62,Poor,7h 10min
+2025-07-31,74,61,Fair,7h 11min
+2025-08-02,57,62,Poor,7h 47min
+2025-08-03,49,68,Poor,6h 34min
+2025-08-05,76,62,Fair,7h 41min
+2025-08-06,53,65,Poor,6h 25min
+2025-08-07,44,67,Poor,6h 42min
+2025-08-08,54,65,Poor,6h 33min
+2025-08-09,77,60,Fair,8h 2min
+2025-08-10,62,63,Fair,8h 23min
+2025-08-11,56,66,Poor,5h 43min
+2025-08-12,61,66,Fair,6h 36min
+2025-08-13,61,66,Fair,6h 58min
+2025-08-14,51,67,Poor,4h 38min
+2025-08-15,53,67,Poor,6h 34min
+2025-08-16,53,65,Poor,6h 2min
+2025-08-17,67,63,Fair,7h 47min
+2025-08-18,49,68,Poor,5h 47min
+2025-08-19,66,65,Fair,5h 35min
+2025-08-20,53,66,Poor,7h 58min
+2025-08-21,58,65,Poor,7h 58min
+2025-08-22,46,68,Poor,5h 58min
+2025-08-23,53,66,Poor,4h 8min
+2025-08-24,74,61,Fair,8h 47min
+2025-08-25,44,69,Poor,5h 37min
+2025-08-26,57,68,Poor,5h 49min
+2025-08-27,65,64,Fair,5h 42min
+2025-08-28,65,63,Fair,9h 29min
+2025-08-29,55,68,Poor,6h 0min
+2025-08-30,41,69,Poor,7h 0min
+2025-08-31,70,63,Fair,7h 6min
+2025-09-01,55,66,Poor,5h 30min
+2025-09-02,81,60,Good,8h 1min
+2025-09-03,71,60,Fair,7h 41min
+2025-09-04,72,61,Fair,6h 31min
+2025-09-05,51,63,Poor,4h 36min
+2025-09-06,69,61,Fair,7h 26min
+2025-09-07,56,65,Poor,7h 52min
+2025-09-08,77,59,Fair,7h 28min
+2025-09-09,73,61,Fair,6h 16min
+2025-09-10,59,63,Poor,5h 59min
+2025-09-11,62,63,Fair,6h 19min
+2025-09-12,69,62,Fair,8h 14min
+2025-09-13,52,65,Poor,4h 57min
+2025-09-14,59,64,Poor,6h 6min
+2025-09-15,60,63,Fair,7h 44min
+2025-09-16,65,60,Fair,7h 54min
+2025-09-17,66,63,Fair,7h 25min
+2025-09-18,77,59,Fair,7h 31min
+2025-09-19,75,60,Fair,6h 25min
+2025-09-20,58,62,Poor,8h 18min
+2025-09-21,71,60,Fair,8h 46min
+2025-09-22,52,66,Poor,6h 58min
+2025-09-23,52,64,Poor,5h 24min
+2025-09-24,48,65,Poor,5h 2min
+2025-09-25,58,62,Poor,5h 37min
+2025-09-26,50,65,Poor,8h 5min
+2025-09-27,51,64,Poor,5h 9min
+2025-09-28,52,65,Poor,8h 50min
+2025-09-29,54,64,Poor,6h 34min
+2025-09-30,67,60,Fair,6h 32min
+2025-10-01,78,57,Fair,7h 24min
+2025-10-02,59,61,Poor,6h 22min
+2025-10-03,72,58,Fair,7h 29min
+2025-10-04,41,64,Poor,6h 43min
+2025-10-05,60,60,Fair,7h 41min
+2025-10-06,62,58,Fair,7h 31min
+2025-10-07,70,58,Fair,5h 28min
+2025-10-08,77,58,Fair,5h 53min
+2025-10-09,82,57,Good,6h 0min
+2025-10-10,73,58,Fair,5h 2min
+2025-10-11,59,59,Poor,6h 24min
+2025-10-12,78,58,Fair,7h 30min
+2025-10-13,54,62,Poor,7h 53min
+2025-10-14,65,58,Fair,8h 5min
+2025-10-15,63,59,Fair,6h 5min
+2025-10-16,53,60,Poor,7h 23min
+2025-10-17,63,58,Fair,6h 22min
+2025-10-18,70,58,Fair,7h 0min
+2025-10-19,52,63,Poor,5h 31min
+2025-10-20,64,63,Fair,6h 0min
+2025-10-21,55,62,Poor,6h 17min
+2025-10-22,56,61,Poor,6h 2min
+2025-10-23,46,64,Poor,7h 2min
+2025-10-24,67,60,Fair,7h 8min
+2025-10-25,68,58,Fair,6h 4min
+2025-10-26,55,61,Poor,5h 35min
+2025-10-27,64,58,Fair,8h 21min
+2025-10-28,64,59,Fair,6h 30min
+2025-10-29,69,58,Fair,6h 27min
+2025-10-30,73,56,Fair,6h 1min
+2025-10-31,57,58,Poor,5h 25min
+2025-11-01,76,56,Fair,5h 44min
+2025-11-02,62,57,Fair,6h 23min
+2025-11-03,62,56,Fair,7h 38min
+2025-11-04,52,59,Poor,5h 45min
+2025-11-05,73,56,Fair,5h 52min
+2025-11-06,64,57,Fair,8h 31min
+2025-11-07,65,58,Fair,7h 28min
+2025-11-08,61,58,Fair,8h 38min
+2025-11-09,55,60,Poor,8h 5min
+2025-11-10,58,59,Poor,7h 0min
+2025-11-11,59,58,Poor,5h 25min
+2025-11-12,63,58,Fair,6h 54min
+2025-11-13,56,60,Poor,8h 10min
+2025-11-14,54,60,Poor,5h 29min
+2025-11-15,57,60,Poor,8h 1min
+2025-11-16,66,58,Fair,6h 37min
+2025-11-17,71,58,Fair,4h 42min
+2025-11-18,58,58,Poor,6h 21min
+2025-11-19,59,59,Poor,6h 40min
+2025-11-20,55,59,Poor,5h 39min
+2025-11-21,71,58,Fair,5h 55min
+2025-11-22,60,59,Fair,6h 45min
+2025-11-23,79,56,Fair,6h 19min
+2025-11-24,59,61,Poor,7h 33min
+2025-11-25,48,61,Poor,5h 22min
+2025-11-26,51,62,Poor,5h 18min
+2025-11-27,59,60,Poor,8h 33min
+2025-11-28,66,59,Fair,6h 5min
+2025-11-29,69,58,Fair,7h 11min
+2025-11-30,75,57,Fair,8h 4min
+2025-12-01,60,62,Fair,7h 4min
+2025-12-02,54,63,Poor,5h 31min
+2025-12-03,65,60,Fair,5h 40min
+2025-12-04,61,61,Fair,6h 10min
+2025-12-05,59,60,Poor,7h 34min
+2025-12-06,69,58,Fair,6h 30min
+2025-12-07,61,61,Fair,8h 15min
+2025-12-08,60,60,Fair,6h 11min
+2025-12-09,57,62,Poor,8h 31min
+2025-12-10,70,59,Fair,5h 38min
+2025-12-11,67,59,Fair,6h 51min
+2025-12-12,56,64,Poor,7h 41min
+2025-12-13,70,61,Fair,5h 43min
+2025-12-14,94,55,Excellent,8h 10min
+2025-12-15,75,60,Fair,6h 28min
+2025-12-16,78,57,Fair,6h 42min
+2025-12-17,78,57,Fair,8h 13min
+2025-12-18,71,58,Fair,7h 26min
+2025-12-19,79,56,Fair,7h 1min
+2025-12-20,70,59,Fair,7h 1min
+2025-12-21,67,60,Fair,7h 4min
+2025-12-22,47,64,Poor,4h 14min
+2025-12-23,59,64,Poor,6h 40min
+2025-12-24,61,63,Fair,3h 56min
+2025-12-25,76,63,Fair,5h 51min
+2025-12-26,56,65,Poor,6h 39min
+2025-12-27,60,62,Fair,7h 46min
+2025-12-28,58,64,Poor,5h 53min
+2025-12-29,54,63,Poor,8h 3min
+2025-12-30,71,59,Fair,7h 40min
+2025-12-31,67,60,Fair,5h 36min
+2026-01-01,56,62,Poor,8h 9min
+2026-01-02,46,66,Poor,6h 43min
+2026-01-03,65,61,Fair,6h 19min
+2026-01-04,62,61,Fair,7h 55min
+2026-01-05,48,59,Poor,5h 50min
+2026-01-06,69,61,Fair,6h 14min
+2026-01-08,59,61,Poor,6h 37min
+2026-01-09,72,60,Fair,6h 3min
+2026-01-10,59,62,Poor,7h 37min
+2026-01-12,81,60,Good,7h 44min
+2026-01-14,59,62,Poor,7h 16min
+2026-01-15,68,60,Fair,6h 14min
+2026-01-16,68,60,Fair,8h 5min
+2026-01-18,49,60,Poor,6h 31min
+2026-01-19,57,60,Poor,7h 20min
+2026-01-20,59,63,Poor,7h 0min
+2026-01-21,60,63,Fair,7h 9min
+2026-01-22,50,61,Poor,4h 39min
+2026-01-23,64,62,Fair,6h 22min
+2026-01-24,55,66,Poor,6h 14min
+2026-01-25,48,64,Poor,3h 45min
+2026-01-26,60,63,Fair,7h 8min
+2026-01-27,65,63,Fair,5h 47min
+2026-01-28,63,62,Fair,7h 24min
+2026-01-29,56,62,Poor,6h 34min
+2026-01-30,54,64,Poor,5h 18min
+2026-01-31,61,63,Fair,6h 44min
+2026-02-01,48,62,Poor,6h 17min`;
+
+    const sleepData = rawData.split('\n').map(line => {
+      const [dateStr, score, rhr, quality, duration] = line.split(',');
+      const date = new Date(dateStr + 'T00:00:00');
+      return {
+        date,
+        dateStr,
+        score: parseInt(score),
+        rhr: parseFloat(rhr),
+        quality,
+        duration,
+        durationHours: parseDuration(duration),
+        moonPhase: getMoonPhase(date),
+        moonInfo: getMoonPhaseName(getMoonPhase(date)),
+        moonIllumination: getMoonIllumination(getMoonPhase(date))
+      };
+    }).filter(d => !isNaN(d.score));
+
+    function SleepMoonAnalysis() {
+      const [view, setView] = useState('scatter');
+      const [metric, setMetric] = useState('score');
+      
+      const stats = useMemo(() => {
+        const phases = {};
+        const phaseOrder = ['new', 'waxing_crescent', 'first_quarter', 'waxing_gibbous', 'full', 'waning_gibbous', 'last_quarter', 'waning_crescent'];
+        phaseOrder.forEach(p => phases[p] = { scores: [], durations: [], rhrs: [] });
+        
+        sleepData.forEach(d => {
+          phases[d.moonInfo.category].scores.push(d.score);
+          phases[d.moonInfo.category].durations.push(d.durationHours);
+          phases[d.moonInfo.category].rhrs.push(d.rhr);
+        });
+        
+        return phaseOrder.map(cat => {
+          const data = phases[cat];
+          const avg = arr => arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : 0;
+          const info = getMoonPhaseName(phaseOrder.indexOf(cat) * 3.69);
+          return {
+            category: cat,
+            avgScore: avg(data.scores).toFixed(1),
+            avgDuration: avg(data.durations).toFixed(2),
+            avgRhr: avg(data.rhrs).toFixed(1),
+            count: data.scores.length,
+            emoji: info.emoji,
+            name: info.shortName
+          };
+        });
+      }, []);
+      
+      const correlation = useMemo(() => {
+        const n = sleepData.length;
+        const illuminations = sleepData.map(d => d.moonIllumination);
+        const values = sleepData.map(d => metric === 'score' ? d.score : metric === 'duration' ? d.durationHours : d.rhr);
+        const mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+        const meanIll = mean(illuminations), meanVal = mean(values);
+        let num = 0, denIll = 0, denVal = 0;
+        for (let i = 0; i < n; i++) {
+          const di = illuminations[i] - meanIll, dv = values[i] - meanVal;
+          num += di * dv; denIll += di * di; denVal += dv * dv;
+        }
+        return (num / Math.sqrt(denIll * denVal)).toFixed(3);
+      }, [metric]);
+      
+      const avgScore = (sleepData.reduce((a, b) => a + b.score, 0) / sleepData.length).toFixed(1);
+      const maxEntry = sleepData.reduce((a, b) => a.score > b.score ? a : b);
+      const minEntry = sleepData.reduce((a, b) => a.score < b.score ? a : b);
+      
+      const firstDate = sleepData[0]?.dateStr.slice(0, 7).replace('-', ' ');
+      const lastDate = sleepData[sleepData.length - 1]?.dateStr.slice(0, 7).replace('-', ' ');
+
+      const styles = {
+        container: {
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 40%, #16213e 70%, #0d0d1a 100%)',
+          color: '#e0e0f0',
+          fontFamily: "'Crimson Pro', Georgia, serif",
+          padding: '2rem',
+          position: 'relative'
+        },
+        stars: {
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: `radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.8), transparent),
+                       radial-gradient(1.5px 1.5px at 30% 10%, #fff, transparent),
+                       radial-gradient(1px 1px at 50% 30%, rgba(255,255,255,0.6), transparent),
+                       radial-gradient(2px 2px at 70% 15%, #fff, transparent),
+                       radial-gradient(1px 1px at 85% 25%, rgba(255,255,255,0.7), transparent),
+                       radial-gradient(1px 1px at 15% 45%, #fff, transparent),
+                       radial-gradient(1.5px 1.5px at 40% 55%, rgba(255,255,255,0.5), transparent),
+                       radial-gradient(1px 1px at 60% 40%, #fff, transparent),
+                       radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.6), transparent),
+                       radial-gradient(2px 2px at 25% 70%, #fff, transparent)`,
+          opacity: 0.5, pointerEvents: 'none', zIndex: 0
+        },
+        content: { position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto' },
+        title: {
+          fontSize: '2.4rem', fontWeight: 300, letterSpacing: '0.12em',
+          textTransform: 'uppercase', margin: 0,
+          background: 'linear-gradient(180deg, #f8f8ff 0%, #9999cc 100%)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+        },
+        statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '2rem' },
+        statCard: {
+          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '12px', padding: '1.2rem', textAlign: 'center', backdropFilter: 'blur(8px)'
+        },
+        controls: { display: 'flex', justifyContent: 'center', gap: '0.8rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
+        button: (active) => ({
+          background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+          border: '1px solid rgba(255,255,255,0.15)', color: '#e0e0f0', padding: '0.5rem 1.2rem',
+          borderRadius: '16px', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.05em', textTransform: 'uppercase'
+        }),
+        select: {
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+          color: '#e0e0f0', padding: '0.5rem 1rem', borderRadius: '16px', fontSize: '0.85rem', cursor: 'pointer'
+        },
+        chartBox: { background: 'rgba(0,0,0,0.25)', borderRadius: '16px', padding: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' },
+        analysis: { marginTop: '1.5rem', padding: '1.2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }
+      };
+
+      return (
+        <div style={styles.container}>
+          <div style={styles.stars} />
+          <div style={styles.content}>
+            <header style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>🌙</div>
+              <h1 style={styles.title}>Lunar Sleep Analysis</h1>
+              <p style={{ fontSize: '1rem', opacity: 0.5, marginTop: '0.5rem', letterSpacing: '0.08em' }}>
+                {sleepData.length} nights · {firstDate} — {lastDate}
+              </p>
+            </header>
+
+            <div style={styles.statsGrid}>
+              {[
+                { label: 'Avg Score', value: avgScore, sub: '/100' },
+                { label: 'Best Night', value: maxEntry.score, sub: maxEntry.dateStr },
+                { label: 'Worst Night', value: minEntry.score, sub: minEntry.dateStr },
+                { label: 'Correlation', value: correlation, sub: `vs ${metric}` }
+              ].map((s, i) => (
+                <div key={i} style={styles.statCard}>
+                  <div style={{ fontSize: '2rem', fontWeight: 300, color: '#b8b8ff', fontFamily: "'DM Mono', monospace" }}>{s.value}</div>
+                  <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.6, marginTop: '0.2rem' }}>{s.label}</div>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.35, marginTop: '0.1rem' }}>{s.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={styles.controls}>
+              {['scatter', 'phases', 'timeline'].map(v => (
+                <button key={v} onClick={() => setView(v)} style={styles.button(view === v)}>
+                  {v === 'scatter' ? '⚡ Scatter' : v === 'phases' ? '🌙 Phases' : '📈 Timeline'}
+                </button>
+              ))}
+              <select value={metric} onChange={e => setMetric(e.target.value)} style={styles.select}>
+                <option value="score">Sleep Score</option>
+                <option value="duration">Duration</option>
+                <option value="rhr">Resting HR</option>
+              </select>
+            </div>
+
+            {view === 'scatter' && (
+              <div style={styles.chartBox}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 400, marginBottom: '1rem', opacity: 0.7 }}>
+                  Moon Illumination vs {metric === 'score' ? 'Sleep Score' : metric === 'duration' ? 'Duration (hrs)' : 'Resting HR'}
+                </h2>
+                <div style={{ position: 'relative', height: '350px', marginBottom: '1rem' }}>
+                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: '30px', width: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '0.7rem', opacity: 0.4, textAlign: 'right', paddingRight: '8px' }}>
+                    <span>{metric === 'score' ? '100' : metric === 'duration' ? '10' : '75'}</span>
+                    <span>{metric === 'score' ? '75' : metric === 'duration' ? '8' : '65'}</span>
+                    <span>{metric === 'score' ? '50' : metric === 'duration' ? '6' : '55'}</span>
+                    <span>{metric === 'score' ? '25' : metric === 'duration' ? '4' : '45'}</span>
+                  </div>
+                  <div style={{ marginLeft: '45px', height: 'calc(100% - 30px)', position: 'relative', borderLeft: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    {['🌑', '🌓', '🌕', '🌗', '🌑'].map((e, i) => (
+                      <div key={i} style={{ position: 'absolute', left: `${i * 25}%`, bottom: '-25px', fontSize: '1rem', transform: i === 0 ? 'none' : i === 4 ? 'translateX(-100%)' : 'translateX(-50%)' }}>{e}</div>
+                    ))}
+                    {[25, 50, 75].map(pct => (
+                      <div key={pct} style={{ position: 'absolute', left: 0, right: 0, top: `${100 - pct}%`, borderTop: '1px dashed rgba(255,255,255,0.05)' }} />
+                    ))}
+                    {sleepData.map((d, i) => {
+                      const val = metric === 'score' ? d.score : metric === 'duration' ? d.durationHours : d.rhr;
+                      const yPct = metric === 'score' ? val : metric === 'duration' ? ((val - 3) / 7) * 100 : ((75 - val) / 30) * 100;
+                      const color = d.quality === 'Good' || d.quality === 'Excellent' ? '#88ff88' : d.quality === 'Fair' ? '#a8a8ff' : '#ff8888';
+                      return (
+                        <div key={i} style={{
+                          position: 'absolute', left: `${d.moonIllumination * 100}%`, bottom: `${yPct}%`,
+                          width: '8px', height: '8px', background: color, borderRadius: '50%',
+                          transform: 'translate(-50%, 50%)', opacity: 0.6, cursor: 'pointer'
+                        }} title={`${d.dateStr}\n${d.moonInfo.emoji} ${d.moonInfo.name}\nScore: ${d.score} · ${d.duration}`} />
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', fontSize: '0.75rem', opacity: 0.6 }}>
+                  <span><span style={{ color: '#88ff88' }}>●</span> Good/Excellent</span>
+                  <span><span style={{ color: '#a8a8ff' }}>●</span> Fair</span>
+                  <span><span style={{ color: '#ff8888' }}>●</span> Poor</span>
+                </div>
+              </div>
+            )}
+
+            {view === 'phases' && (
+              <div style={styles.chartBox}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 400, marginBottom: '1.5rem', opacity: 0.7 }}>
+                  Average {metric === 'score' ? 'Sleep Score' : metric === 'duration' ? 'Duration' : 'RHR'} by Moon Phase
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.8rem' }}>
+                  {stats.map((s, i) => {
+                    const val = metric === 'score' ? s.avgScore : metric === 'duration' ? s.avgDuration : s.avgRhr;
+                    const barHeight = metric === 'score' ? val : metric === 'duration' ? (parseFloat(s.avgDuration) / 10) * 100 : ((75 - parseFloat(s.avgRhr)) / 20) * 100;
+                    return (
+                      <div key={i} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '10px', padding: '1rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${Math.min(barHeight, 100)}%`, background: 'linear-gradient(180deg, rgba(140,140,220,0.2) 0%, rgba(100,100,180,0.05) 100%)', transition: 'height 0.4s ease' }} />
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '2rem', marginBottom: '0.3rem' }}>{s.emoji}</div>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 300, color: '#b8b8ff', fontFamily: "'DM Mono', monospace" }}>{val}</div>
+                          <div style={{ fontSize: '0.7rem', opacity: 0.5, marginTop: '0.2rem' }}>{s.name}</div>
+                          <div style={{ fontSize: '0.65rem', opacity: 0.3 }}>n={s.count}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {view === 'timeline' && (
+              <div style={styles.chartBox}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 400, marginBottom: '1rem', opacity: 0.7 }}>
+                  {metric === 'score' ? 'Sleep Score' : metric === 'duration' ? 'Duration' : 'RHR'} Over Time
+                </h2>
+                <div style={{ position: 'relative', height: '300px' }}>
+                  <div style={{ marginLeft: '35px', height: '100%', position: 'relative', borderLeft: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    {sleepData.map((d, i) => {
+                      const val = metric === 'score' ? d.score : metric === 'duration' ? d.durationHours : d.rhr;
+                      const yPct = metric === 'score' ? val : metric === 'duration' ? ((val - 3) / 7) * 100 : ((75 - val) / 20) * 100;
+                      return (
+                        <div key={i} style={{
+                          position: 'absolute', left: `${(i / (sleepData.length - 1)) * 100}%`, bottom: `${yPct}%`,
+                          transform: 'translate(-50%, 50%)', fontSize: '0.7rem', cursor: 'pointer', opacity: 0.7
+                        }} title={`${d.dateStr}: ${d.score} · ${d.moonInfo.name}`}>{d.moonInfo.emoji}</div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginLeft: '35px', marginTop: '0.5rem', fontSize: '0.7rem', opacity: 0.4 }}>
+                  <span>{firstDate}</span><span>→</span><span>{lastDate}</span>
+                </div>
+              </div>
+            )}
+
+            <div style={styles.analysis}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 400, marginBottom: '0.8rem', opacity: 0.8 }}>📋 Statistical Analysis</h3>
+              <div style={{ fontSize: '0.9rem', lineHeight: 1.7, opacity: 0.7 }}>
+                <p style={{ marginBottom: '0.6rem' }}>
+                  With <strong style={{ color: '#b8b8ff' }}>{sleepData.length} nightly observations</strong> and a correlation of <strong style={{ color: '#b8b8ff' }}>{correlation}</strong>, 
+                  your data shows {Math.abs(parseFloat(correlation)) < 0.1 ? 'essentially no relationship' : Math.abs(parseFloat(correlation)) < 0.2 ? 'a very weak relationship' : Math.abs(parseFloat(correlation)) < 0.3 ? 'a weak relationship' : 'a moderate relationship'} between moon illumination and sleep {metric}.
+                </p>
+                <p style={{ marginBottom: '0.6rem' }}>
+                  <strong style={{ color: '#88cc88' }}>Best phase:</strong> {stats.sort((a,b) => parseFloat(b.avgScore) - parseFloat(a.avgScore))[0]?.emoji} {stats.sort((a,b) => parseFloat(b.avgScore) - parseFloat(a.avgScore))[0]?.name} (avg {stats.sort((a,b) => parseFloat(b.avgScore) - parseFloat(a.avgScore))[0]?.avgScore})
+                  {' · '}
+                  <strong style={{ color: '#cc8888' }}>Worst:</strong> {stats.sort((a,b) => parseFloat(a.avgScore) - parseFloat(b.avgScore))[0]?.emoji} {stats.sort((a,b) => parseFloat(a.avgScore) - parseFloat(b.avgScore))[0]?.name} (avg {stats.sort((a,b) => parseFloat(a.avgScore) - parseFloat(b.avgScore))[0]?.avgScore})
+                </p>
+                <p style={{ opacity: 0.5, fontSize: '0.8rem' }}>
+                  Note: Scientific consensus is that moon phases have no measurable effect on human sleep. Any patterns here are likely coincidental.
+                </p>
+              </div>
+            </div>
+            
+            <footer style={{ textAlign: 'center', marginTop: '2rem', opacity: 0.25, fontSize: '0.75rem', letterSpacing: '0.08em' }}>
+              Data from Garmin Connect · Synodic lunar calculation
+            </footer>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<SleepMoonAnalysis />);
+  </script>
+</body>
+</html>

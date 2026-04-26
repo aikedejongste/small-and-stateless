@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logical Fallacies — Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #17171b;
+    --border: #2a2a32;
+    --accent: #e8c547;
+    --accent2: #e06c75;
+    --text: #e8e6e0;
+    --muted: #7a7880;
+    --correct: #4caf87;
+    --wrong: #e06c75;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 80px;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  .everything { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    margin-top: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    font-size: 15px;
+  }
+
+  /* Progress */
+  .progress-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Score chips */
+  .score-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 32px;
+    justify-content: flex-end;
+  }
+  .chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .chip.correct { border-color: var(--correct); color: var(--correct); }
+  .chip.wrong { border-color: var(--wrong); color: var(--wrong); }
+
+  /* Question card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .statement {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(17px, 3vw, 22px);
+    line-height: 1.55;
+    font-style: italic;
+    color: var(--text);
+    padding-left: 20px;
+    border-left: 3px solid var(--accent);
+  }
+
+  /* Options */
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 520px) {
+    .options { grid-template-columns: 1fr; }
+  }
+
+  .option-btn {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 16px 16px 48px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .option-letter {
+    position: absolute;
+    left: 16px; top: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .option-btn.selected-correct {
+    border-color: var(--correct);
+    background: rgba(76, 175, 135, 0.08);
+  }
+  .option-btn.selected-correct .option-letter {
+    background: var(--correct); border-color: var(--correct); color: #000;
+  }
+
+  .option-btn.selected-wrong {
+    border-color: var(--wrong);
+    background: rgba(224, 108, 117, 0.08);
+  }
+  .option-btn.selected-wrong .option-letter {
+    background: var(--wrong); border-color: var(--wrong); color: #000;
+  }
+
+  .option-btn.reveal-correct {
+    border-color: var(--correct);
+    opacity: 0.7;
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  /* Info button */
+  .option-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .info-btn {
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid var(--muted);
+    color: var(--muted);
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+    line-height: 1;
+    margin-top: 1px;
+  }
+  .info-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Tooltip / definition popover */
+  .def-popover {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    background: #22222a;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    width: 260px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    pointer-events: none;
+    animation: popIn 0.15s ease;
+    left: 0; bottom: calc(100% + 8px);
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .def-popover.visible { display: block; }
+  .def-popover-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+    animation: fadeUp 0.3s ease;
+  }
+  .feedback.correct { background: rgba(76,175,135,0.1); border: 1px solid var(--correct); color: var(--correct); }
+  .feedback.wrong   { background: rgba(224,108,117,0.1); border: 1px solid var(--wrong);  color: var(--text); }
+  .feedback .answer-name { color: var(--accent); font-weight: 500; }
+
+  /* Next button */
+  .next-btn {
+    display: none;
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .next-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* Results */
+  .results {
+    display: none;
+    text-align: center;
+    animation: fadeUp 0.5s ease;
+  }
+  .results-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .results-label {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-weight: 300;
+  }
+  .results-msg {
+    margin-top: 24px;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-style: italic;
+  }
+  .restart-btn {
+    margin-top: 32px;
+    padding: 14px 40px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .restart-btn:hover { background: var(--accent); color: #000; }
+
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 32px 0;
+  }
+</style>
+</head>
+<body>
+<div class="everything">
+
+  <header>
+    <p class="eyebrow">Critical Thinking</p>
+    <h1>Logical <em>Fallacies</em></h1>
+    <p class="subtitle">Identify the flawed reasoning in each statement</p>
+  </header>
+
+  <div id="quiz-area">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <span class="progress-label" id="progress-label">0 / 0</span>
+    </div>
+    <div class="score-row">
+      <span class="chip correct" id="correct-count">✓ 0</span>
+      <span class="chip wrong"   id="wrong-count">✗ 0</span>
+    </div>
+
+    <div class="card" id="question-card">
+      <div class="card-label">Spot the fallacy</div>
+      <p class="statement" id="statement-text"></p>
+    </div>
+
+    <div class="options" id="options-grid"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn">Next Question →</button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="divider"></div>
+    <div class="results-score" id="results-score"></div>
+    <div class="results-label">correct answers</div>
+    <div class="results-msg" id="results-msg"></div>
+    <button class="restart-btn" onclick="startQuiz()">Try Again</button>
+  </div>
+
+</div>
+
+<script>
+const FALLACIES = [
+  { name: "Ad Hominem",         def: "Attacking the person making an argument rather than the argument itself." },
+  { name: "Straw Man",          def: "Misrepresenting someone's argument to make it easier to attack." },
+  { name: "False Dichotomy",    def: "Presenting only two options when more exist. Also called 'false dilemma'." },
+  { name: "Slippery Slope",     def: "Assuming one event will inevitably lead to extreme consequences without justification." },
+  { name: "Appeal to Authority",def: "Claiming something is true solely because an authority figure said so, without further evidence." },
+  { name: "Circular Reasoning", def: "The conclusion is used as a premise in the argument — it assumes what it tries to prove." },
+  { name: "Hasty Generalization",def:"Drawing a broad conclusion from a small or unrepresentative sample." },
+  { name: "Red Herring",        def: "Introducing an irrelevant point to distract from the actual issue." },
+  { name: "Appeal to Emotion",  def: "Using emotional manipulation rather than logical reasoning to persuade." },
+  { name: "Bandwagon",          def: "Arguing something is true or good because many people believe or do it." },
+  { name: "Post Hoc",           def: "Assuming causation from correlation — 'X happened before Y, so X caused Y'." },
+  { name: "False Equivalence",  def: "Treating two things as equal when they are significantly different." },
+  { name: "Burden Shift",       def: "Demanding opponents disprove a claim rather than proving it yourself." },
+  { name: "Anecdotal",          def: "Using a personal story or isolated example instead of evidence or sound reasoning." },
+  { name: "Tu Quoque",          def: "Dismissing a criticism by pointing out the critic does the same thing. 'You too!'." },
+  { name: "Appeal to Nature",   def: "Arguing something is good because it's 'natural', or bad because it's 'unnatural'." },
+  { name: "Sunk Cost",          def: "Continuing something because of past investment, ignoring current evidence it's wrong." },
+  { name: "Gambler's Fallacy",  def: "Believing past random events affect future ones — e.g. a coin 'must' land heads soon." },
+  { name: "Composition",        def: "Assuming what's true of the parts must be true of the whole." },
+  { name: "Division",           def: "Assuming what's true of the whole must be true of each part." },
+];
+
+const QUESTIONS = [
+  { statement: "You can't trust Dr. Lee's climate research — she drives an SUV.", answer: "Ad Hominem" },
+  { statement: "My opponent wants sensible gun safety regulations. He wants to take away every American's guns!", answer: "Straw Man" },
+  { statement: "You're either with us or you're against us.", answer: "False Dichotomy" },
+  { statement: "If we allow same-sex marriage, next people will want to marry their pets.", answer: "Slippery Slope" },
+  { statement: "Dr. Oz said this supplement cures diabetes, so it must be effective.", answer: "Appeal to Authority" },
+  { statement: "The Bible is true because it is the word of God, and we know God exists because the Bible says so.", answer: "Circular Reasoning" },
+  { statement: "I've met three French people and they were all rude. French people are rude.", answer: "Hasty Generalization" },
+  { statement: "Why worry about healthcare costs? There are children starving in Africa!", answer: "Red Herring" },
+  { statement: "Think of the children — if we don't ban this film, society will crumble.", answer: "Appeal to Emotion" },
+  { statement: "Over a billion people practice this religion, so its beliefs must be correct.", answer: "Bandwagon" },
+  { statement: "I started carrying a lucky charm and then won three games. It must be working.", answer: "Post Hoc" },
+  { statement: "Comparing a minor workplace disagreement to the Holocaust is completely valid.", answer: "False Equivalence" },
+  { statement: "Prove to me that ghosts don't exist, and only then will I stop believing in them.", answer: "Burden Shift" },
+  { statement: "My grandfather smoked his whole life and lived to 95. Smoking can't be that bad.", answer: "Anecdotal" },
+  { statement: "You say I shouldn't eat junk food — but I saw you eat a burger last week!", answer: "Tu Quoque" },
+  { statement: "Herbal tea is healthier than medicine because it's completely natural.", answer: "Appeal to Nature" },
+  { statement: "We've already spent €500,000 on this failing project. We can't stop now.", answer: "Sunk Cost" },
+  { statement: "The coin has landed tails five times in a row — it must land heads soon.", answer: "Gambler's Fallacy" },
+  { statement: "Every player on the team is excellent, therefore the team is excellent.", answer: "Composition" },
+  { statement: "The orchestra is world-class, so every musician in it must be world-class.", answer: "Division" },
+  { statement: "Senator Harris is clearly wrong about tax policy — she's been divorced twice.", answer: "Ad Hominem" },
+  { statement: "Legalising marijuana will lead to everyone using heroin within a decade.", answer: "Slippery Slope" },
+  { statement: "Einstein believed in a higher power, so there must be a God.", answer: "Appeal to Authority" },
+  { statement: "I know this investment will recover because I've already lost so much on it.", answer: "Sunk Cost" },
+  { statement: "My neighbour's organic garden gives amazing vegetables, so all organic food is superior.", answer: "Anecdotal" },
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let questions, current, correct, wrong, answered;
+
+function startQuiz() {
+  questions = shuffle(QUESTIONS).slice(0, 15);
+  current = 0; correct = 0; wrong = 0; answered = false;
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[current];
+  const total = questions.length;
+
+  document.getElementById('progress-fill').style.width = `${(current / total) * 100}%`;
+  document.getElementById('progress-label').textContent = `${current + 1} / ${total}`;
+  document.getElementById('correct-count').textContent = `✓ ${correct}`;
+  document.getElementById('wrong-count').textContent  = `✗ ${wrong}`;
+
+  document.getElementById('statement-text').textContent = `"${q.statement}"`;
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+
+  // Build 4 options: correct + 3 random wrong
+  const wrongPool = shuffle(FALLACIES.filter(f => f.name !== q.answer));
+  const opts = shuffle([
+    FALLACIES.find(f => f.name === q.answer),
+    ...wrongPool.slice(0, 3)
+  ]);
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  const letters = ['A','B','C','D'];
+
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.dataset.name = opt.name;
+    btn.style.position = 'relative';
+
+    btn.innerHTML = `
+      <span class="option-letter">${letters[i]}</span>
+      <div class="option-info">
+        <span class="opt-label">${opt.name}</span>
+        <button class="info-btn" data-name="${opt.name}" title="Definition">?</button>
+      </div>
+      <div class="def-popover" id="pop-${i}">
+        <div class="def-popover-name">${opt.name}</div>
+        <div>${opt.def}</div>
+      </div>`;
+
+    btn.addEventListener('click', (e) => {
+      if (e.target.classList.contains('info-btn')) return;
+      if (!answered) selectAnswer(opt.name, q.answer);
+    });
+
+    grid.appendChild(btn);
+
+    // Info button logic
+    const infoBtn = btn.querySelector('.info-btn');
+    const popover = btn.querySelector('.def-popover');
+    let popVisible = false;
+
+    infoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      popVisible = !popVisible;
+      // Hide all others
+      document.querySelectorAll('.def-popover').forEach(p => p.classList.remove('visible'));
+      if (popVisible) popover.classList.add('visible');
+    });
+  });
+
+  document.addEventListener('click', hideAllPopovers);
+
+  // Re-animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  requestAnimationFrame(() => { card.style.animation = ''; });
+}
+
+function hideAllPopovers(e) {
+  if (!e.target.classList.contains('info-btn')) {
+    document.querySelectorAll('.def-popover').forEach(p => p.classList.remove('visible'));
+  }
+}
+
+function selectAnswer(chosen, correct_answer) {
+  answered = true;
+  const isCorrect = chosen === correct_answer;
+  if (isCorrect) correct++; else wrong++;
+
+  document.getElementById('correct-count').textContent = `✓ ${correct}`;
+  document.getElementById('wrong-count').textContent  = `✗ ${wrong}`;
+
+  document.querySelectorAll('.option-btn').forEach(btn => {
+    btn.disabled = true;
+    if (btn.dataset.name === chosen && isCorrect) btn.classList.add('selected-correct');
+    else if (btn.dataset.name === chosen && !isCorrect) btn.classList.add('selected-wrong');
+    else if (btn.dataset.name === correct_answer) btn.classList.add('reveal-correct');
+  });
+
+  const fb = document.getElementById('feedback');
+  if (isCorrect) {
+    fb.className = 'feedback correct';
+    fb.innerHTML = `✓ Correct! That's the <span class="answer-name">${correct_answer}</span> fallacy.`;
+  } else {
+    const def = FALLACIES.find(f => f.name === correct_answer)?.def || '';
+    fb.className = 'feedback wrong';
+    fb.innerHTML = `✗ Not quite. The correct answer is <span class="answer-name">${correct_answer}</span>. <br><br><em>${def}</em>`;
+  }
+  fb.style.display = 'block';
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = (current + 1 >= questions.length) ? 'See Results →' : 'Next Question →';
+}
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  document.removeEventListener('click', hideAllPopovers);
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+});
+
+function showResults() {
+  document.getElementById('quiz-area').style.display = 'none';
+  const r = document.getElementById('results');
+  r.style.display = 'block';
+  const pct = Math.round((correct / questions.length) * 100);
+  document.getElementById('results-score').textContent = `${correct}/${questions.length}`;
+
+  let msg;
+  if (pct === 100)      msg = 'Perfect. Your reasoning is ironclad.';
+  else if (pct >= 80)   msg = 'Excellent. You\'re a sharp critical thinker.';
+  else if (pct >= 60)   msg = 'Good effort. A bit more practice and you\'ll be formidable.';
+  else if (pct >= 40)   msg = 'Fair start. Keep studying — this matters.';
+  else                  msg = 'The sophists got you this time. Try again!';
+  document.getElementById('results-msg').textContent = msg;
+}
+
+// Start on load
+startQuiz();
+</script>
+</body>
+</html>

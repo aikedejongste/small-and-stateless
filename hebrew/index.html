@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Hebrew Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  .card-face { -webkit-backface-visibility: hidden !important; backface-visibility: hidden !important; }
+  .card-inner { -webkit-transform-style: preserve-3d !important; transform-style: preserve-3d !important; }
+  html, body { min-height: 100vh; background: #0f0f23; color: #fff; font-family: 'Segoe UI', -apple-system, sans-serif; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #ffffff15; border-radius: 3px; }
+  button { font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const e = React.createElement;
+const { useState, useEffect, useCallback } = React;
+
+const WORDS = [
+  {h:"כן",t:"ken",e:"yes",c:"Essentials"},{h:"לא",t:"lo",e:"no",c:"Essentials"},{h:"שלום",t:"shalom",e:"hello / peace / goodbye",c:"Essentials"},{h:"תודה",t:"toda",e:"thank you",c:"Essentials"},{h:"בבקשה",t:"bevakasha",e:"please / you're welcome",c:"Essentials"},{h:"סליחה",t:"slicha",e:"excuse me / sorry",c:"Essentials"},{h:"מה",t:"ma",e:"what",c:"Essentials"},{h:"מי",t:"mi",e:"who",c:"Essentials"},{h:"איפה",t:"eifo",e:"where",c:"Essentials"},{h:"מתי",t:"matai",e:"when",c:"Essentials"},{h:"למה",t:"lama",e:"why",c:"Essentials"},{h:"איך",t:"eich",e:"how",c:"Essentials"},{h:"כמה",t:"kama",e:"how much / how many",c:"Essentials"},{h:"זה",t:"ze",e:"this (m)",c:"Essentials"},{h:"זאת",t:"zot",e:"this (f)",c:"Essentials"},{h:"טוב",t:"tov",e:"good",c:"Essentials"},{h:"רע",t:"ra",e:"bad",c:"Essentials"},{h:"גדול",t:"gadol",e:"big / great",c:"Essentials"},{h:"קטן",t:"katan",e:"small",c:"Essentials"},{h:"יש",t:"yesh",e:"there is / have",c:"Essentials"},{h:"אין",t:"ein",e:"there isn't / don't have",c:"Essentials"},{h:"בסדר",t:"beseder",e:"okay / alright",c:"Essentials"},{h:"יאללה",t:"yalla",e:"let's go / come on",c:"Essentials"},{h:"סבבה",t:"sababa",e:"cool / great / no problem",c:"Essentials"},{h:"אחלה",t:"achla",e:"awesome / great",c:"Essentials"},{h:"ממש",t:"mamash",e:"really / totally",c:"Essentials"},{h:"נכון",t:"nachon",e:"right / correct / true",c:"Essentials"},{h:"מספיק",t:"maspik",e:"enough",c:"Essentials"},{h:"בטח",t:"betach",e:"sure / of course",c:"Essentials"},{h:"כאילו",t:"ke'ilu",e:"like / as if (filler word)",c:"Essentials"},
+  {h:"אני",t:"ani",e:"I",c:"Pronouns & People"},{h:"אתה",t:"ata",e:"you (m)",c:"Pronouns & People"},{h:"את",t:"at",e:"you (f)",c:"Pronouns & People"},{h:"הוא",t:"hu",e:"he",c:"Pronouns & People"},{h:"היא",t:"hi",e:"she",c:"Pronouns & People"},{h:"אנחנו",t:"anachnu",e:"we",c:"Pronouns & People"},{h:"אתם",t:"atem",e:"you (m plural)",c:"Pronouns & People"},{h:"הם",t:"hem",e:"they (m)",c:"Pronouns & People"},{h:"הן",t:"hen",e:"they (f)",c:"Pronouns & People"},{h:"שלי",t:"sheli",e:"my / mine",c:"Pronouns & People"},{h:"שלך",t:"shelcha / shelach",e:"your (m/f)",c:"Pronouns & People"},{h:"שלו",t:"shelo",e:"his",c:"Pronouns & People"},{h:"שלה",t:"shela",e:"hers",c:"Pronouns & People"},{h:"איש",t:"ish",e:"man",c:"Pronouns & People"},{h:"אישה",t:"isha",e:"woman",c:"Pronouns & People"},{h:"ילד",t:"yeled",e:"boy / child",c:"Pronouns & People"},{h:"ילדה",t:"yalda",e:"girl",c:"Pronouns & People"},{h:"חבר",t:"chaver",e:"friend (m) / boyfriend",c:"Pronouns & People"},{h:"חברה",t:"chavera",e:"friend (f) / girlfriend",c:"Pronouns & People"},{h:"משפחה",t:"mishpacha",e:"family",c:"Pronouns & People"},{h:"אבא",t:"aba",e:"dad",c:"Pronouns & People"},{h:"אמא",t:"ima",e:"mom",c:"Pronouns & People"},{h:"אח",t:"ach",e:"brother",c:"Pronouns & People"},{h:"אחות",t:"achot",e:"sister",c:"Pronouns & People"},{h:"אנשים",t:"anashim",e:"people",c:"Pronouns & People"},
+  {h:"ו",t:"ve-",e:"and (prefix)",c:"Connectors"},{h:"אבל",t:"aval",e:"but",c:"Connectors"},{h:"או",t:"o",e:"or",c:"Connectors"},{h:"גם",t:"gam",e:"also / too",c:"Connectors"},{h:"כי",t:"ki",e:"because",c:"Connectors"},{h:"אז",t:"az",e:"so / then",c:"Connectors"},{h:"רק",t:"rak",e:"only / just",c:"Connectors"},{h:"עוד",t:"od",e:"more / still / another",c:"Connectors"},{h:"כבר",t:"kvar",e:"already",c:"Connectors"},{h:"עכשיו",t:"achshav",e:"now",c:"Connectors"},{h:"פה",t:"po",e:"here",c:"Connectors"},{h:"שם",t:"sham",e:"there",c:"Connectors"},{h:"ככה",t:"kacha",e:"like this / so",c:"Connectors"},{h:"בשביל",t:"bishvil",e:"for / in order to",c:"Connectors"},{h:"עם",t:"im",e:"with",c:"Connectors"},{h:"בלי",t:"bli",e:"without",c:"Connectors"},{h:"של",t:"shel",e:"of / belonging to",c:"Connectors"},{h:"ב",t:"be-",e:"in / at (prefix)",c:"Connectors"},{h:"ל",t:"le-",e:"to / for (prefix)",c:"Connectors"},{h:"מ",t:"me-",e:"from (prefix)",c:"Connectors"},{h:"על",t:"al",e:"on / about",c:"Connectors"},{h:"אחרי",t:"acharei",e:"after",c:"Connectors"},{h:"לפני",t:"lifnei",e:"before",c:"Connectors"},{h:"בין",t:"bein",e:"between",c:"Connectors"},{h:"כמו",t:"kmo",e:"like / as",c:"Connectors"},{h:"אם",t:"im",e:"if",c:"Connectors"},{h:"שׁ",t:"she-",e:"that / which (prefix)",c:"Connectors"},{h:"לכן",t:"lachen",e:"therefore",c:"Connectors"},{h:"אולי",t:"ulai",e:"maybe",c:"Connectors"},{h:"בכלל",t:"bichlal",e:"at all / in general",c:"Connectors"},
+  {h:"רוצה",t:"rotze/rotza",e:"want(s)",c:"Verbs"},{h:"צריך",t:"tzarich/tzricha",e:"need(s) / must",c:"Verbs"},{h:"יכול",t:"yachol/yechola",e:"can / able",c:"Verbs"},{h:"יודע",t:"yode'a/yoda'at",e:"know(s)",c:"Verbs"},{h:"אוהב",t:"ohev/ohevet",e:"love(s) / like(s)",c:"Verbs"},{h:"חושב",t:"choshev/choshevet",e:"think(s)",c:"Verbs"},{h:"אומר",t:"omer/omeret",e:"say(s)",c:"Verbs"},{h:"מדבר",t:"medaber/medaberet",e:"speak(s) / talk(s)",c:"Verbs"},{h:"עושה",t:"ose/osa",e:"do(es) / make(s)",c:"Verbs"},{h:"הולך",t:"holech/holechet",e:"go(es) / walk(s)",c:"Verbs"},{h:"בא",t:"ba/ba'a",e:"come(s)",c:"Verbs"},{h:"רואה",t:"ro'e/ro'a",e:"see(s)",c:"Verbs"},{h:"שומע",t:"shome'a/shoma'at",e:"hear(s)",c:"Verbs"},{h:"נותן",t:"noten/notenet",e:"give(s)",c:"Verbs"},{h:"לוקח",t:"loke'ach/lokachat",e:"take(s)",c:"Verbs"},{h:"אוכל",t:"ochel/ochelet",e:"eat(s)",c:"Verbs"},{h:"שותה",t:"shote/shota",e:"drink(s)",c:"Verbs"},{h:"ישן",t:"yashen/yeshena",e:"sleep(s)",c:"Verbs"},{h:"עובד",t:"oved/ovedet",e:"work(s)",c:"Verbs"},{h:"גר",t:"gar/gara",e:"live(s) / reside(s)",c:"Verbs"},{h:"קורא",t:"kore/koret",e:"read(s) / call(s)",c:"Verbs"},{h:"כותב",t:"kotev/kotevet",e:"write(s)",c:"Verbs"},{h:"שואל",t:"sho'el/sho'elet",e:"ask(s)",c:"Verbs"},{h:"עונה",t:"one/ona",e:"answer(s)",c:"Verbs"},{h:"מחכה",t:"mechake/mechaka",e:"wait(s)",c:"Verbs"},{h:"רץ",t:"ratz/ratza",e:"run(s)",c:"Verbs"},{h:"יושב",t:"yoshev/yoshevet",e:"sit(s)",c:"Verbs"},{h:"עומד",t:"omed/omedet",e:"stand(s)",c:"Verbs"},{h:"פותח",t:"pote'ach/potachat",e:"open(s)",c:"Verbs"},{h:"סוגר",t:"soger/sogeret",e:"close(s)",c:"Verbs"},{h:"שם",t:"sam/sama",e:"put(s)",c:"Verbs"},{h:"מרגיש",t:"margish/margisha",e:"feel(s)",c:"Verbs"},{h:"מבין",t:"mevin/mevina",e:"understand(s)",c:"Verbs"},{h:"זוכר",t:"zocher/zocheret",e:"remember(s)",c:"Verbs"},{h:"שוכח",t:"shoche'ach/shochachat",e:"forget(s)",c:"Verbs"},{h:"מחפש",t:"mechapes/mechapeset",e:"search(es) / look for",c:"Verbs"},{h:"מוצא",t:"motze/motzet",e:"find(s)",c:"Verbs"},{h:"קונה",t:"kone/kona",e:"buy(s)",c:"Verbs"},{h:"משלם",t:"meshalem/meshalmet",e:"pay(s)",c:"Verbs"},{h:"חוזר",t:"chozer/chozeret",e:"return(s) / go back",c:"Verbs"},{h:"מתחיל",t:"matchil/matchila",e:"start(s) / begin(s)",c:"Verbs"},{h:"גומר",t:"gomer/gomeret",e:"finish(es)",c:"Verbs"},{h:"עוזר",t:"ozer/ozeret",e:"help(s)",c:"Verbs"},{h:"לומד",t:"lomed/lomedet",e:"learn(s) / study(ies)",c:"Verbs"},{h:"מלמד",t:"melamed/melamdet",e:"teach(es)",c:"Verbs"},{h:"נוסע",t:"nose'a/nosa'at",e:"travel(s) / drive(s)",c:"Verbs"},{h:"מגיע",t:"magi'a/magi'a",e:"arrive(s) / deserve(s)",c:"Verbs"},{h:"משחק",t:"mesachek/mesacheket",e:"play(s)",c:"Verbs"},{h:"צוחק",t:"tzochek/tzocheket",e:"laugh(s)",c:"Verbs"},{h:"בוכה",t:"boche/bocha",e:"cry(ies)",c:"Verbs"},
+  {h:"יפה",t:"yafe/yafa",e:"beautiful / nice",c:"Descriptors"},{h:"חדש",t:"chadash/chadasha",e:"new",c:"Descriptors"},{h:"ישן",t:"yashan/yeshana",e:"old (things)",c:"Descriptors"},{h:"זקן",t:"zaken/zkena",e:"old (people)",c:"Descriptors"},{h:"צעיר",t:"tza'ir/tze'ira",e:"young",c:"Descriptors"},{h:"חם",t:"cham",e:"hot",c:"Descriptors"},{h:"קר",t:"kar",e:"cold",c:"Descriptors"},{h:"מהר",t:"maher",e:"fast / quickly",c:"Descriptors"},{h:"לאט",t:"le'at",e:"slowly",c:"Descriptors"},{h:"הרבה",t:"harbe",e:"a lot / many",c:"Descriptors"},{h:"קצת",t:"ktzat",e:"a little / some",c:"Descriptors"},{h:"חזק",t:"chazak",e:"strong",c:"Descriptors"},{h:"קשה",t:"kashe",e:"hard / difficult",c:"Descriptors"},{h:"קל",t:"kal",e:"easy / light",c:"Descriptors"},{h:"חשוב",t:"chashuv",e:"important",c:"Descriptors"},{h:"מעניין",t:"me'anyen",e:"interesting",c:"Descriptors"},{h:"שונה",t:"shone",e:"different",c:"Descriptors"},{h:"אותו דבר",t:"oto davar",e:"same thing",c:"Descriptors"},{h:"מוכן",t:"muchan/muchana",e:"ready",c:"Descriptors"},{h:"פתוח",t:"patu'ach",e:"open",c:"Descriptors"},{h:"סגור",t:"sagur",e:"closed",c:"Descriptors"},{h:"רחוק",t:"rachok",e:"far",c:"Descriptors"},{h:"קרוב",t:"karov",e:"close / near",c:"Descriptors"},{h:"נחמד",t:"nechmad/nechmada",e:"nice / pleasant",c:"Descriptors"},{h:"מצחיק",t:"matzhik",e:"funny",c:"Descriptors"},{h:"עצוב",t:"atzuv",e:"sad",c:"Descriptors"},{h:"שמח",t:"same'ach",e:"happy",c:"Descriptors"},{h:"עייף",t:"ayef/ayefa",e:"tired",c:"Descriptors"},{h:"רעב",t:"ra'ev/re'eva",e:"hungry",c:"Descriptors"},{h:"מלא",t:"male/mle'a",e:"full",c:"Descriptors"},{h:"ריק",t:"reik/reika",e:"empty",c:"Descriptors"},{h:"חינם",t:"chinam",e:"free (no cost)",c:"Descriptors"},{h:"יקר",t:"yakar",e:"expensive / dear",c:"Descriptors"},{h:"זול",t:"zol",e:"cheap",c:"Descriptors"},{h:"נורא",t:"nora",e:"terrible / terribly (intensifier)",c:"Descriptors"},
+  {h:"היום",t:"hayom",e:"today",c:"Time"},{h:"מחר",t:"machar",e:"tomorrow",c:"Time"},{h:"אתמול",t:"etmol",e:"yesterday",c:"Time"},{h:"עכשיו",t:"achshav",e:"now",c:"Time"},{h:"אחר כך",t:"achar kach",e:"afterwards / later",c:"Time"},{h:"תמיד",t:"tamid",e:"always",c:"Time"},{h:"אף פעם",t:"af pa'am",e:"never",c:"Time"},{h:"לפעמים",t:"lif'amim",e:"sometimes",c:"Time"},{h:"בוקר",t:"boker",e:"morning",c:"Time"},{h:"צהריים",t:"tzohorayim",e:"noon / afternoon",c:"Time"},{h:"ערב",t:"erev",e:"evening",c:"Time"},{h:"לילה",t:"laila",e:"night",c:"Time"},{h:"שבוע",t:"shavu'a",e:"week",c:"Time"},{h:"חודש",t:"chodesh",e:"month",c:"Time"},{h:"שנה",t:"shana",e:"year",c:"Time"},{h:"יום",t:"yom",e:"day",c:"Time"},{h:"שעה",t:"sha'a",e:"hour",c:"Time"},{h:"דקה",t:"daka",e:"minute",c:"Time"},{h:"רגע",t:"rega",e:"moment / wait a sec",c:"Time"},{h:"מוקדם",t:"mukdam",e:"early",c:"Time"},{h:"מאוחר",t:"me'uchar",e:"late",c:"Time"},{h:"שבת",t:"shabbat",e:"Saturday / Sabbath",c:"Time"},{h:"חג",t:"chag",e:"holiday / festival",c:"Time"},{h:"פעם",t:"pa'am",e:"time (occurrence) / once",c:"Time"},{h:"כל יום",t:"kol yom",e:"every day",c:"Time"},
+  {h:"אחד",t:"echad",e:"one",c:"Numbers"},{h:"שניים",t:"shnayim",e:"two",c:"Numbers"},{h:"שלוש",t:"shalosh",e:"three",c:"Numbers"},{h:"ארבע",t:"arba",e:"four",c:"Numbers"},{h:"חמש",t:"chamesh",e:"five",c:"Numbers"},{h:"שש",t:"shesh",e:"six",c:"Numbers"},{h:"שבע",t:"sheva",e:"seven",c:"Numbers"},{h:"שמונה",t:"shmone",e:"eight",c:"Numbers"},{h:"תשע",t:"tesha",e:"nine",c:"Numbers"},{h:"עשר",t:"eser",e:"ten",c:"Numbers"},{h:"מאה",t:"me'a",e:"hundred",c:"Numbers"},{h:"אלף",t:"elef",e:"thousand",c:"Numbers"},{h:"ראשון",t:"rishon",e:"first",c:"Numbers"},{h:"אחרון",t:"acharon",e:"last",c:"Numbers"},{h:"הכל",t:"hakol",e:"everything / all",c:"Numbers"},
+  {h:"בית",t:"bayit",e:"house / home",c:"Places & Things"},{h:"חדר",t:"cheder",e:"room",c:"Places & Things"},{h:"רחוב",t:"rechov",e:"street",c:"Places & Things"},{h:"עיר",t:"ir",e:"city",c:"Places & Things"},{h:"ארץ",t:"eretz",e:"country / land",c:"Places & Things"},{h:"ים",t:"yam",e:"sea",c:"Places & Things"},{h:"מים",t:"mayim",e:"water",c:"Places & Things"},{h:"אוכל",t:"ochel",e:"food",c:"Places & Things"},{h:"לחם",t:"lechem",e:"bread",c:"Places & Things"},{h:"קפה",t:"kafe",e:"coffee",c:"Places & Things"},{h:"בירה",t:"bira",e:"beer",c:"Places & Things"},{h:"כסף",t:"kesef",e:"money / silver",c:"Places & Things"},{h:"טלפון",t:"telefon",e:"phone",c:"Places & Things"},{h:"מכונית",t:"mechonit",e:"car",c:"Places & Things"},{h:"דרך",t:"derech",e:"road / way",c:"Places & Things"},{h:"עבודה",t:"avoda",e:"work / job",c:"Places & Things"},{h:"דבר",t:"davar",e:"thing",c:"Places & Things"},{h:"מקום",t:"makom",e:"place",c:"Places & Things"},{h:"חנות",t:"chanut",e:"shop / store",c:"Places & Things"},{h:"מסעדה",t:"mis'ada",e:"restaurant",c:"Places & Things"},{h:"שוק",t:"shuk",e:"market",c:"Places & Things"},{h:"בית קפה",t:"beit kafe",e:"café",c:"Places & Things"},{h:"בית חולים",t:"beit cholim",e:"hospital",c:"Places & Things"},{h:"שמש",t:"shemesh",e:"sun",c:"Places & Things"},{h:"גשם",t:"geshem",e:"rain",c:"Places & Things"},{h:"חוף",t:"chof",e:"beach",c:"Places & Things"},{h:"תמונה",t:"tmuna",e:"picture / image",c:"Places & Things"},{h:"ספר",t:"sefer",e:"book",c:"Places & Things"},{h:"שיר",t:"shir",e:"song",c:"Places & Things"},{h:"סרט",t:"seret",e:"movie / film",c:"Places & Things"},{h:"חשבון",t:"cheshbon",e:"bill / account",c:"Places & Things"},{h:"מפתח",t:"mafte'ach",e:"key",c:"Places & Things"},{h:"דלת",t:"delet",e:"door",c:"Places & Things"},{h:"חלון",t:"chalon",e:"window",c:"Places & Things"},{h:"שולחן",t:"shulchan",e:"table",c:"Places & Things"},
+  {h:"ראש",t:"rosh",e:"head",c:"Body & Health"},{h:"יד",t:"yad",e:"hand",c:"Body & Health"},{h:"רגל",t:"regel",e:"foot / leg",c:"Body & Health"},{h:"עין",t:"ayin",e:"eye",c:"Body & Health"},{h:"פה",t:"pe",e:"mouth",c:"Body & Health"},{h:"לב",t:"lev",e:"heart",c:"Body & Health"},{h:"כואב",t:"ko'ev",e:"hurts / painful",c:"Body & Health"},{h:"חולה",t:"chole",e:"sick",c:"Body & Health"},{h:"בריא",t:"bari",e:"healthy",c:"Body & Health"},{h:"רופא",t:"rofe",e:"doctor",c:"Body & Health"},{h:"תרופה",t:"trufa",e:"medicine",c:"Body & Health"},{h:"חיים",t:"chaim",e:"life",c:"Body & Health"},{h:"מוות",t:"mavet",e:"death",c:"Body & Health"},{h:"פנים",t:"panim",e:"face",c:"Body & Health"},{h:"גוף",t:"guf",e:"body",c:"Body & Health"},
+  {h:"מה נשמע",t:"ma nishma",e:"what's up?",c:"Phrases"},{h:"מה קורה",t:"ma kore",e:"what's happening?",c:"Phrases"},{h:"הכל בסדר",t:"hakol beseder",e:"everything's fine",c:"Phrases"},{h:"לא יודע",t:"lo yode'a",e:"I don't know",c:"Phrases"},{h:"אני לא מבין",t:"ani lo mevin",e:"I don't understand",c:"Phrases"},{h:"מה זה",t:"ma ze",e:"what is this?",c:"Phrases"},{h:"בוא נלך",t:"bo nelech",e:"let's go",c:"Phrases"},{h:"אין בעיה",t:"ein be'aya",e:"no problem",c:"Phrases"},{h:"לא משנה",t:"lo meshane",e:"doesn't matter",c:"Phrases"},{h:"חבל",t:"chaval",e:"too bad / what a waste",c:"Phrases"},{h:"כל הכבוד",t:"kol hakavod",e:"well done / respect",c:"Phrases"},{h:"מזל טוב",t:"mazal tov",e:"congratulations",c:"Phrases"},{h:"בהצלחה",t:"behatzlacha",e:"good luck",c:"Phrases"},{h:"לחיים",t:"l'chaim",e:"cheers (to life)",c:"Phrases"},{h:"בוקר טוב",t:"boker tov",e:"good morning",c:"Phrases"},{h:"ערב טוב",t:"erev tov",e:"good evening",c:"Phrases"},{h:"לילה טוב",t:"laila tov",e:"good night",c:"Phrases"},{h:"להתראות",t:"lehitra'ot",e:"see you / goodbye",c:"Phrases"},{h:"רגע אחד",t:"rega echad",e:"one moment",c:"Phrases"},{h:"תגיד / תגידי",t:"tagid/tagidi",e:"tell me / say (m/f)",c:"Phrases"},{h:"נו",t:"nu",e:"so? / come on / well?",c:"Phrases"},{h:"וואלה",t:"walla",e:"really? / wow / I swear",c:"Phrases"},{h:"אני חושב ש",t:"ani choshev she-",e:"I think that...",c:"Phrases"},{h:"אפשר",t:"efshar",e:"possible / may I?",c:"Phrases"},{h:"אי אפשר",t:"i efshar",e:"impossible / can't",c:"Phrases"},{h:"בכיף",t:"bekef",e:"with pleasure / happily",c:"Phrases"},{h:"שטויות",t:"shtuyot",e:"nonsense / BS",c:"Phrases"},{h:"מה פתאום",t:"ma pit'om",e:"no way / of course not",c:"Phrases"},{h:"תראה / תראי",t:"tir'e/tir'i",e:"look / see (m/f)",c:"Phrases"},{h:"נראה לי",t:"nir'e li",e:"it seems to me / I think",c:"Phrases"},
+  {h:"אהבה",t:"ahava",e:"love",c:"Social"},{h:"שמחה",t:"simcha",e:"joy / celebration",c:"Social"},{h:"כעס",t:"ka'as",e:"anger",c:"Social"},{h:"פחד",t:"pachad",e:"fear",c:"Social"},{h:"בעיה",t:"be'aya",e:"problem",c:"Social"},{h:"עזרה",t:"ezra",e:"help",c:"Social"},{h:"כוח",t:"ko'ach",e:"strength / power",c:"Social"},{h:"שקט",t:"sheket",e:"quiet / silence",c:"Social"},{h:"רעש",t:"ra'ash",e:"noise",c:"Social"},{h:"מילה",t:"mila",e:"word",c:"Social"},{h:"שפה",t:"safa",e:"language / lip",c:"Social"},{h:"עברית",t:"ivrit",e:"Hebrew",c:"Social"},{h:"אנגלית",t:"anglit",e:"English",c:"Social"},{h:"סיפור",t:"sipur",e:"story",c:"Social"},{h:"שאלה",t:"she'ela",e:"question",c:"Social"},{h:"תשובה",t:"tshuva",e:"answer",c:"Social"},{h:"אמת",t:"emet",e:"truth",c:"Social"},{h:"שקר",t:"sheker",e:"lie",c:"Social"},{h:"חופש",t:"chofesh",e:"freedom / vacation",c:"Social"},{h:"זמן",t:"zman",e:"time",c:"Social"}
+];
+
+const CATEGORIES = [...new Set(WORDS.map(w => w.c))];
+const CC = {
+  "Essentials":{a:"#e94560",l:"#ff6b81"},"Pronouns & People":{a:"#f5a623",l:"#ffc964"},
+  "Connectors":{a:"#00b894",l:"#55efc4"},"Verbs":{a:"#6c5ce7",l:"#a29bfe"},
+  "Descriptors":{a:"#fd79a8",l:"#fab1c4"},"Time":{a:"#00cec9",l:"#81ecec"},
+  "Numbers":{a:"#fdcb6e",l:"#fde68a"},"Places & Things":{a:"#e17055",l:"#fab1a0"},
+  "Body & Health":{a:"#d63031",l:"#ff7675"},"Phrases":{a:"#0984e3",l:"#74b9ff"},
+  "Social":{a:"#a29bfe",l:"#c8c3ff"}
+};
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function App() {
+  const [mode, setMode] = useState("practice");
+  const [selectedCats, setSelectedCats] = useState(new Set(["Essentials"]));
+  const [deck, setDeck] = useState([]);
+  const [idx, setIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [showBack, setShowBack] = useState(false);
+  const [known, setKnown] = useState(new Set());
+  const [retry, setRetry] = useState([]);
+  const [listFilter, setListFilter] = useState("All");
+  const [done, setDone] = useState(false);
+  const [dir, setDir] = useState("heb2eng");
+
+  useEffect(() => {
+    if (flipped) {
+      const t = setTimeout(() => setShowBack(true), 250);
+      return () => clearTimeout(t);
+    } else {
+      setShowBack(false);
+    }
+  }, [flipped]);
+
+  const startDeck = useCallback(() => {
+    const pool = WORDS.filter(w => selectedCats.has(w.c));
+    setDeck(shuffle(pool)); setIdx(0); setFlipped(false);
+    setKnown(new Set()); setRetry([]); setDone(false);
+  }, [selectedCats]);
+
+  useEffect(() => { startDeck(); }, []);
+
+  const toggleCat = (cat) => {
+    setSelectedCats(prev => {
+      const next = new Set(prev);
+      next.has(cat) ? (next.size > 1 && next.delete(cat)) : next.add(cat);
+      return next;
+    });
+  };
+
+  const handleMark = (gotIt) => {
+    const word = deck[idx];
+    if (gotIt) setKnown(prev => new Set(prev).add(word.h + word.e));
+    else setRetry(prev => [...prev, word]);
+    if (idx < deck.length - 1) { setIdx(idx + 1); setFlipped(false); }
+    else if (retry.length > 0 || !gotIt) {
+      const r = gotIt ? [...retry] : [...retry, word];
+      setDeck(shuffle(r)); setRetry([]); setIdx(0); setFlipped(false);
+    } else setDone(true);
+  };
+
+  const w = deck[idx];
+  const co = w ? (CC[w.c] || CC.Essentials) : CC.Essentials;
+  const selCount = WORDS.filter(w => selectedCats.has(w.c)).length;
+
+  const s = (obj) => obj; // style passthrough
+
+  // Pill button helper
+  const pill = (active, accent, light, label, onClick) =>
+    e("button", { key: label, onClick, style: s({
+      padding:"5px 12px",borderRadius:8,fontSize:12,border:"1.5px solid "+(active?accent+"":"#ffffff15"),
+      background:active?accent+"20":"transparent",color:active?light:"#ffffff40",cursor:"pointer",
+      transition:"all 0.2s",whiteSpace:"nowrap"
+    })}, label);
+
+  if (mode === "list") {
+    const filtered = listFilter === "All" ? WORDS : WORDS.filter(w => w.c === listFilter);
+    return e("div", {style:{minHeight:"100vh",background:"#0f0f23",color:"#fff",padding:"24px 16px",fontFamily:"'Segoe UI',-apple-system,sans-serif"}},
+      e("div", {style:{maxWidth:800,margin:"0 auto"}},
+        // Header
+        e("div",{style:{display:"flex",alignItems:"baseline",gap:12,marginBottom:4}},
+          e("h1",{style:{fontSize:28,fontWeight:700,margin:0,fontFamily:"'Crimson Pro',serif",background:"linear-gradient(135deg,#e94560,#f5a623)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}},"עברית"),
+          e("span",{style:{fontSize:16,color:"#ffffff40",fontFamily:"'Crimson Pro',serif"}},WORDS.length+" words")
+        ),
+        // Tabs
+        e("div",{style:{display:"flex",gap:4,margin:"20px 0 24px"}},
+          ["practice","list"].map(t => e("button",{key:t,onClick:()=>setMode(t),style:{
+            padding:"8px 20px",borderRadius:10,border:"none",background:mode===t?"#ffffff15":"transparent",
+            color:mode===t?"#fff":"#ffffff50",fontSize:14,cursor:"pointer",fontWeight:mode===t?600:400
+          }},t==="practice"?"Flashcards":"Word List"))
+        ),
+        // Filters
+        e("div",{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}},
+          pill(listFilter==="All","#e94560","#ff6b81","All ("+WORDS.length+")",()=>setListFilter("All")),
+          CATEGORIES.map(cat => pill(listFilter===cat,CC[cat].a,CC[cat].l,cat,()=>setListFilter(cat)))
+        ),
+        // Table
+        e("div",{style:{maxHeight:"70vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}},
+          e("table",{style:{width:"100%",borderCollapse:"separate",borderSpacing:"0 4px"}},
+            e("thead",null,e("tr",{style:{position:"sticky",top:0,background:"#0f0f23",zIndex:2}},
+              ["Hebrew","Sounds like","Meaning"].map(h=>e("th",{key:h,style:{padding:"10px 8px",textAlign:"left",fontSize:11,letterSpacing:2,color:"#ffffff50",textTransform:"uppercase",borderBottom:"1px solid #ffffff15"}},h))
+            )),
+            e("tbody",null,filtered.map((w,i)=>{
+              const c=CC[w.c]||CC.Essentials;
+              return e("tr",{key:i,style:{background:i%2===0?"#ffffff04":"transparent"}},
+                e("td",{style:{padding:"8px",fontSize:22,fontFamily:"serif",direction:"rtl",color:"#fff"}},w.h),
+                e("td",{style:{padding:"8px",fontSize:14,color:c.l,fontStyle:"italic"}},w.t),
+                e("td",{style:{padding:"8px",fontSize:14,color:"#ffffffcc"}},w.e)
+              );
+            }))
+          )
+        )
+      )
+    );
+  }
+
+  // Practice mode
+  return e("div",{style:{minHeight:"100vh",background:"#0f0f23",color:"#fff",padding:"24px 16px",fontFamily:"'Segoe UI',-apple-system,sans-serif"}},
+    e("div",{style:{maxWidth:800,margin:"0 auto"}},
+      // Header
+      e("div",{style:{display:"flex",alignItems:"baseline",gap:12,marginBottom:4}},
+        e("h1",{style:{fontSize:28,fontWeight:700,margin:0,fontFamily:"'Crimson Pro',serif",background:"linear-gradient(135deg,#e94560,#f5a623)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}},"עברית"),
+        e("span",{style:{fontSize:16,color:"#ffffff40",fontFamily:"'Crimson Pro',serif"}},WORDS.length+" words")
+      ),
+      // Tabs
+      e("div",{style:{display:"flex",gap:4,margin:"20px 0 24px"}},
+        ["practice","list"].map(t => e("button",{key:t,onClick:()=>setMode(t),style:{
+          padding:"8px 20px",borderRadius:10,border:"none",background:mode===t?"#ffffff15":"transparent",
+          color:mode===t?"#fff":"#ffffff50",fontSize:14,cursor:"pointer",fontWeight:mode===t?600:400
+        }},t==="practice"?"Flashcards":"Word List"))
+      ),
+      // Category selector
+      e("div",{style:{marginBottom:16}},
+        e("div",{style:{fontSize:11,letterSpacing:2,color:"#ffffff40",textTransform:"uppercase",marginBottom:10}},
+          "Categories ("+selCount+" words selected)"),
+        e("div",{style:{display:"flex",flexWrap:"wrap",gap:6}},
+          CATEGORIES.map(cat => {
+            const cnt = WORDS.filter(w=>w.c===cat).length;
+            return pill(selectedCats.has(cat),CC[cat].a,CC[cat].l,cat+" ("+cnt+")",()=>toggleCat(cat));
+          })
+        )
+      ),
+      // Direction + Start
+      e("div",{style:{display:"flex",gap:12,alignItems:"center",marginBottom:24,flexWrap:"wrap"}},
+        e("button",{onClick:()=>setDir(d=>d==="heb2eng"?"eng2heb":"heb2eng"),style:{
+          padding:"6px 14px",borderRadius:8,fontSize:12,border:"1.5px solid #ffffff20",
+          background:"#ffffff08",color:"#ffffffaa",cursor:"pointer"
+        }},dir==="heb2eng"?"Hebrew → English":"English → Hebrew"),
+        e("button",{onClick:startDeck,style:{
+          padding:"8px 24px",borderRadius:10,border:"none",
+          background:"linear-gradient(135deg,#e94560,#f5a623)",
+          color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer"
+        }},deck.length>0?"Shuffle & Restart":"Start")
+      ),
+      // Session done
+      done && e("div",{style:{textAlign:"center",padding:48,background:"#ffffff06",borderRadius:20}},
+        e("div",{style:{fontSize:48,marginBottom:16}},"✓"),
+        e("div",{style:{fontSize:22,fontWeight:600,color:"#55efc4",marginBottom:8}},"Session Complete"),
+        e("div",{style:{fontSize:14,color:"#ffffff60",marginBottom:24}},"You cleared all the cards!"),
+        e("button",{onClick:startDeck,style:{padding:"10px 24px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#e94560,#f5a623)",color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer"}},"Go Again")
+      ),
+      // Card
+      !done && w && e("div",{style:{perspective:800,width:"100%",maxWidth:420,margin:"0 auto"}},
+        e("div",{className:"card-inner",onClick:()=>setFlipped(!flipped),style:{
+          width:"100%",minHeight:280,cursor:"pointer",position:"relative",
+          transformStyle:"preserve-3d",transition:"transform 0.5s cubic-bezier(0.4,0,0.2,1)",
+          transform:flipped?"rotateY(180deg)":"rotateY(0)"
+        }},
+          // Front
+          e("div",{className:"card-face",style:{
+            position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",
+            background:"linear-gradient(145deg,#16213e 0%,#1a1a2e 100%)",
+            borderRadius:20,border:"2px solid "+co.a+"40",
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            padding:32,boxShadow:"0 8px 32px "+co.a+"20"
+          }},
+            e("div",{style:{fontSize:11,letterSpacing:3,color:co.l,opacity:.6,textTransform:"uppercase",marginBottom:16}},w.c),
+            dir==="heb2eng"
+              ? e("div",null,
+                  e("div",{style:{fontSize:56,color:"#fff",marginBottom:12,fontFamily:"serif",direction:"rtl",lineHeight:1.2,textAlign:"center"}},w.h),
+                  e("div",{style:{fontSize:22,color:co.l,fontStyle:"italic",letterSpacing:1,textAlign:"center"}},w.t)
+                )
+              : e("div",{style:{fontSize:28,color:"#fff",fontWeight:600,textAlign:"center",lineHeight:1.4}},w.e),
+            e("div",{style:{position:"absolute",bottom:16,fontSize:12,color:"#ffffff30"}},"tap to reveal")
+          ),
+          // Back
+          e("div",{className:"card-face",style:{
+            position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",
+            background:"linear-gradient(145deg,"+co.a+"15,#16213e)",
+            borderRadius:20,border:"2px solid "+co.a+"80",
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            padding:32,boxShadow:"0 8px 32px "+co.a+"30"
+          }},
+            e("div",{style:{opacity:showBack?1:0,transition:"opacity 0.15s",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},
+            dir==="heb2eng"
+              ? e("div",null,
+                  e("div",{style:{fontSize:36,color:"#fff",fontFamily:"serif",direction:"rtl",marginBottom:8,opacity:.5}},w.h),
+                  e("div",{style:{fontSize:16,color:co.l,fontStyle:"italic",marginBottom:24,opacity:.5}},w.t),
+                  e("div",{style:{fontSize:32,color:"#fff",fontWeight:600,textAlign:"center",lineHeight:1.3}},w.e)
+                )
+              : e("div",null,
+                  e("div",{style:{fontSize:14,color:"#ffffff60",marginBottom:8}},w.e),
+                  e("div",{style:{fontSize:56,color:"#fff",fontFamily:"serif",direction:"rtl",marginBottom:12,textAlign:"center"}},w.h),
+                  e("div",{style:{fontSize:22,color:co.l,fontStyle:"italic",textAlign:"center"}},w.t)
+                )
+            )
+          )
+        ),
+        // Progress + buttons
+        e("div",{style:{textAlign:"center",marginTop:20}},
+          e("div",{style:{fontSize:13,color:"#ffffff40",marginBottom:16}},(idx+1)+" / "+deck.length),
+          e("div",{style:{display:"flex",gap:12,justifyContent:"center"}},
+            e("button",{onClick:(ev)=>{ev.stopPropagation();handleMark(false);},style:{
+              padding:"14px 32px",borderRadius:12,border:"2px solid #e9456040",
+              background:"#e9456015",color:"#ff6b81",fontSize:16,cursor:"pointer",fontWeight:600
+            }},"Again"),
+            e("button",{onClick:(ev)=>{ev.stopPropagation();handleMark(true);},style:{
+              padding:"14px 32px",borderRadius:12,border:"2px solid "+co.a+"60",
+              background:co.a+"15",color:co.l,fontSize:16,cursor:"pointer",fontWeight:600
+            }},"Got it")
+          )
+        )
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(e(App));
+</script>
+</body>
+</html>
