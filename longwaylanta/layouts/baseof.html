@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ if .IsHome }}{{ site.Title }} — Den Bosch to Koh Lanta by motorbike{{ else }}{{ .Title }} — {{ site.Title }}{{ end }}</title>
+  <meta name="description" content="{{ .Description | default site.Params.description }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏍️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  {{ with resources.Get "css/main.css" | minify | fingerprint }}
+  <link rel="stylesheet" href="{{ .RelPermalink }}">
+  {{ end }}
+  {{ block "head" . }}{{ end }}
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="{{ "/" | relURL }}">Long Way <em>Lanta</em></a>
+      <nav class="site-nav">
+        <a href="{{ "/" | relURL }}#route">Route</a>
+        <a href="{{ "/" | relURL }}#plan">Plan</a>
+        <a href="{{ "/" | relURL }}#bikes">Bikes</a>
+        <a href="{{ "/" | relURL }}#stops">Stops</a>
+        <a href="{{ "/faq/" | relURL }}">Q&amp;A</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    {{ block "main" . }}{{ end }}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>Long Way Lanta</strong> — Den Bosch → Koh Lanta by motorbike.</p>
+      <p class="muted">A living plan; everything here is a draft until the wheels roll.</p>
+    </div>
+  </footer>
+  {{ block "scripts" . }}{{ end }}
+</body>
+</html>

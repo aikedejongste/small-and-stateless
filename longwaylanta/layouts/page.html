@@ -1,0 +1,12 @@
+{{ define "main" }}
+  <article class="section page-section">
+    <div class="container narrow">
+      <p class="crumb"><a href="{{ .Parent.RelPermalink }}">← {{ .Parent.Title }}</a></p>
+      <h1>{{ .Title }}</h1>
+      <div class="prose">{{ .Content }}</div>
+      <hr class="rule">
+      <p class="muted">Part of <a href="{{ "/" | relURL }}">Long Way Lanta</a> — see
+      <a href="{{ .Parent.RelPermalink }}">all questions &amp; decisions</a>.</p>
+    </div>
+  </article>
+{{ end }}

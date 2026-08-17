@@ -1,0 +1,11 @@
+baseURL = "https://bike.aike.be/"
+locale = "en"
+title = "Long Way Lanta"
+enableRobotsTXT = true
+disableKinds = ["taxonomy", "term"]
+
+[params]
+description = "Two friends, two motorbikes, one long way: Den Bosch (Maaspoort) to Koh Lanta (Kohub)."
+
+[markup.goldmark.renderer]
+unsafe = true

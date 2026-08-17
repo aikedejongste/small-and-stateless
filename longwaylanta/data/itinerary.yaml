@@ -1,0 +1,81 @@
+# Draft itinerary. Distances and windows are rough estimates until the
+# day-to-day plan firms up; each stage can later be broken into daily legs.
+stages:
+  - name: "Europe"
+    route: "Den Bosch → Munich → Vienna → Budapest → Transfăgărășan → Bucharest → Sinemorets → Istanbul"
+    window: "Weeks 1–3"
+    distance: "± 3,200 km"
+    notes: >
+      Shakedown stage. Easy roads, easy borders — the place to discover what's
+      wrong with the bikes and the luggage while parts are still a day away.
+      Detour through the Carpathians for the Transfăgărășan and the Slănic
+      salt mine (the high pass is only open roughly July–October), then a last
+      Black Sea swim at Sinemorets before the Turkish border.
+
+  - name: "Turkey & Iran"
+    route: "Istanbul → Ankara → Erzurum → Tabriz → Tehran → Mashhad"
+    window: "Weeks 4–7"
+    distance: "± 3,500 km"
+    notes: >
+      The carnet comes out at the Iranian border. Long distances and cheap
+      fuel, but instead of dropping south to Balochistan we turn north-east
+      at Tehran and aim for the Turkmen border.
+
+  - name: "Central Asia & the Pamir"
+    route: "Ashgabat → Bukhara → Samarkand → Dushanbe → Pamir Highway → Osh"
+    window: "Weeks 8–11"
+    distance: "± 2,800 km"
+    notes: >
+      Turkmenistan is a five-day transit-visa dash; then the Silk Road cities,
+      then the reason we came this way: the M41 Pamir Highway, topping out at
+      4,655 m. High-altitude gravel — the hardest riding of the trip.
+
+  - name: "Karakoram & Pakistan"
+    route: "Osh → Kashgar → Khunjerab Pass → Hunza → Islamabad → Lahore"
+    window: "Weeks 12–14"
+    distance: "± 2,100 km"
+    notes: >
+      The Chinese leg (Irkeshtam to Khunjerab) needs a booked guide and
+      paperwork arranged months ahead. The reward is the Karakoram Highway
+      down through Hunza — and skipping the Balochistan convoys entirely.
+
+  - name: "India"
+    route: "Amritsar → Delhi → Agra → Varanasi"
+    window: "Weeks 15–18"
+    distance: "± 1,700 km"
+    notes: >
+      Short daily distances; Indian traffic sets the pace. Carnet country.
+
+  - name: "Nepal"
+    route: "Sunauli → Pokhara → Kathmandu"
+    window: "Weeks 19–20"
+    distance: "± 700 km"
+    notes: >
+      Rest, service the bikes, and stage for the hardest logistics of the trip.
+
+  - name: "The gap"
+    route: "Kathmandu → Laos"
+    window: "Weeks 21–23"
+    distance: "TBD"
+    open: true
+    notes: >
+      The unsolved bit. Myanmar is closed to overland traffic, so it's either a
+      guided China/Tibet transit (expensive, paperwork-heavy, booked months
+      ahead) or air-freighting the bikes Kathmandu → Bangkok and backtracking.
+      Decision pending — see the FAQ once we've made it.
+
+  - name: "Laos & Northern Thailand"
+    route: "Luang Prabang → Chiang Khong → Chiang Mai"
+    window: "Weeks 24–26"
+    distance: "± 1,200 km"
+    notes: >
+      FVP and TIP arranged before the border — see the FAQ on how long the
+      bike can stay. Timed for October/November so the calendar-year trick works.
+
+  - name: "Thailand south"
+    route: "Chiang Mai → Bangkok → Chumphon → Krabi → Koh Lanta"
+    window: "Weeks 27–29"
+    distance: "± 1,800 km"
+    notes: >
+      The victory lap. Ferry or the bridge onto Lanta, park at Kohub, open a
+      laptop like nothing happened.

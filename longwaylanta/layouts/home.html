@@ -1,0 +1,117 @@
+{{ define "head" }}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{{ end }}
+
+{{ define "main" }}
+  <section class="hero">
+    <div class="container">
+      <p class="kicker">Two friends · two motorbikes · one long way</p>
+      <h1>Den&nbsp;Bosch <span class="arrow">→</span> Koh&nbsp;Lanta</h1>
+      <p class="lede">{{ .Content }}</p>
+      <div class="stats">
+        <div class="stat"><span class="stat-num">±17,000</span><span class="stat-label">kilometres</span></div>
+        <div class="stat"><span class="stat-num">18+</span><span class="stat-label">countries</span></div>
+        <div class="stat"><span class="stat-num">±29</span><span class="stat-label">weeks</span></div>
+        <div class="stat"><span class="stat-num">2</span><span class="stat-label">Dutch plates</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="route" class="map-section">
+    <div id="route-map" data-route="{{ "route.geojson" | relURL }}" aria-label="Map of the route from Den Bosch to Koh Lanta"></div>
+    <div class="container map-legend">
+      <span><i class="swatch swatch-planned"></i> Planned route</span>
+      <span><i class="swatch swatch-open"></i> Undecided — see <a href="{{ "/faq/" | relURL }}">Q&amp;A</a></span>
+      <span class="muted">Click the map to enable scroll zoom.</span>
+    </div>
+  </section>
+
+  <section id="plan" class="section">
+    <div class="container">
+      <h2>Day to day<span class="accent">.</span></h2>
+      <p class="section-intro">The plan in stages, drafted coarse and refined as departure gets closer.
+      Each stage will grow into daily legs.</p>
+      <ol class="stages">
+        {{ range site.Data.itinerary.stages }}
+        <li class="stage{{ if .open }} stage-open{{ end }}">
+          <div class="stage-head">
+            <h3>{{ .name }}{{ if .open }} <span class="tag">undecided</span>{{ end }}</h3>
+            <div class="stage-meta"><span>{{ .window }}</span><span>{{ .distance }}</span></div>
+          </div>
+          <p class="stage-route">{{ .route }}</p>
+          <p class="stage-notes">{{ .notes }}</p>
+        </li>
+        {{ end }}
+      </ol>
+    </div>
+  </section>
+
+  <section id="bikes" class="section section-alt">
+    <div class="container">
+      <h2>The bikes<span class="accent">.</span></h2>
+      <p class="section-intro">Both riders take the same model, so one set of spares serves both. Down to two options.</p>
+      <div class="cards">
+        {{ range site.Data.bikes.bikes }}
+        <article class="card">
+          <h3>{{ .name }}</h3>
+          <dl class="specs">
+            <div><dt>Model</dt><dd>{{ .model }}</dd></div>
+            <div><dt>Plate</dt><dd>{{ .plate }}</dd></div>
+            <div><dt>Status</dt><dd>{{ .status }}</dd></div>
+          </dl>
+          <ul class="reqs">
+            {{ range .requirements }}<li>{{ . }}</li>{{ end }}
+          </ul>
+          {{ with .url }}<a class="card-link" href="{{ . }}" target="_blank" rel="noopener">Honda specs ↗</a>{{ end }}
+        </article>
+        {{ end }}
+      </div>
+    </div>
+  </section>
+
+  <section id="stops" class="section">
+    <div class="container">
+      <h2>Stops along the way<span class="accent">.</span></h2>
+      <p class="section-intro">The anchors of the route — the places we're aiming the front wheel at.</p>
+      <div class="stops-grid">
+        {{ range $i, $s := site.Data.stops.stops }}
+        <article class="stop">
+          <span class="stop-num">{{ add $i 1 }}</span>
+          <div>
+            <h3>{{ $s.name }}</h3>
+            <p class="stop-country">{{ $s.country }}</p>
+            <p>{{ $s.blurb }}</p>
+            {{ with $s.gmaps }}<a class="stop-map" href="{{ . }}" target="_blank" rel="noopener">Google Maps ↗</a>{{ end }}
+          </div>
+        </article>
+        {{ end }}
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="section section-alt">
+    <div class="container">
+      <h2>Questions &amp; decisions<span class="accent">.</span></h2>
+      <p class="section-intro">Every big decision, written down: the question, the answer, the reasoning.</p>
+      <div class="faq-list">
+        {{ range where site.RegularPages "Section" "faq" }}
+        <a class="faq-item" href="{{ .RelPermalink }}">
+          <h3>{{ .Title }}</h3>
+          <p>{{ .Params.summary }}</p>
+          <span class="faq-more">Read the reasoning →</span>
+        </a>
+        {{ end }}
+      </div>
+    </div>
+  </section>
+{{ end }}
+
+{{ define "scripts" }}
+  <script type="application/json" id="stops-data">{{ site.Data.stops.stops | jsonify | safeJS }}</script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  {{ with resources.Get "js/map.js" | minify | fingerprint }}
+  <script src="{{ .RelPermalink }}"></script>
+  {{ end }}
+{{ end }}

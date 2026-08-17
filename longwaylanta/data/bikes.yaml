@@ -1,0 +1,22 @@
+# Both riders take the same model. Two candidates; pick one, buy two.
+bikes:
+  - name: "Bike — Option A"
+    model: "Honda NX500"
+    url: "https://www.honda.nl/motorcycles/range/adventure/nx500/overview.html"
+    plate: "Dutch — see the FAQ for why"
+    status: "Under consideration"
+    requirements:
+      - "Comfortable at 90 km/h all day"
+      - "Lighter and cheaper of the two"
+      - "Modest value — the carnet deposit scales with it"
+      - "Parts commonly available across Asia"
+
+  - name: "Bike — Option B"
+    model: "Honda Transalp 750"
+    url: "https://www.honda.nl/motorcycles/range/adventure/xl750_transalp/overview.html"
+    plate: "Dutch — see the FAQ for why"
+    status: "Under consideration"
+    requirements:
+      - "More power and range for luggage and long days"
+      - "Heavier and pricier — bigger carnet deposit"
+      - "Parts commonly available across Asia"

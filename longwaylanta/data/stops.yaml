@@ -1,0 +1,104 @@
+# Stops shown on the map and in the "Stops along the way" section.
+# lat/lon in decimal degrees.
+stops:
+  - name: "Maaspoort, Den Bosch"
+    country: "Netherlands"
+    lat: 51.727
+    lon: 5.318
+    blurb: "Kilometre zero. Coffee, group photo, go."
+
+  - name: "Transfăgărășan"
+    country: "Romania"
+    lat: 45.604
+    lon: 24.617
+    gmaps: "https://maps.app.goo.gl/f8coEPg5VgYobFo27"
+    blurb: "The hairpin road over the Făgăraș ridge — ridden for its own sake, not to get anywhere."
+
+  - name: "Mina Unirea, Slănic"
+    country: "Romania"
+    lat: 45.233
+    lon: 25.941
+    gmaps: "https://maps.app.goo.gl/C5qkhKagen4SxzZX7"
+    blurb: "Park the bikes, descend 200 m into a salt mine the size of a cathedral."
+
+  - name: "Sinemorets"
+    country: "Bulgaria"
+    lat: 42.062
+    lon: 27.973
+    gmaps: "https://www.google.com/maps/search/?api=1&query=Sinemorets%2C+Bulgaria"
+    blurb: "Bulgaria's best beach town. One last swim in the Black Sea before Turkey."
+
+  - name: "Istanbul"
+    country: "Turkey"
+    lat: 41.008
+    lon: 28.978
+    blurb: "Ride out of Europe across the Bosphorus. First continent done."
+
+  - name: "Tehran"
+    country: "Iran"
+    lat: 35.689
+    lon: 51.389
+    blurb: "First carnet country in full swing; regroup before turning north-east for Central Asia."
+
+  - name: "Samarkand"
+    country: "Uzbekistan"
+    lat: 39.654
+    lon: 66.975
+    gmaps: "https://www.google.com/maps/search/?api=1&query=Registan%2C+Samarkand"
+    blurb: "The Registan — Silk Road centrepiece, and we arrive the Silk Road way."
+
+  - name: "Pamir Highway"
+    country: "Tajikistan"
+    lat: 37.489
+    lon: 71.553
+    gmaps: "https://www.google.com/maps/search/?api=1&query=Pamir+Highway"
+    blurb: "The M41 over the roof of the world — the road we rerouted half the trip for."
+
+  - name: "Hunza Valley"
+    country: "Pakistan"
+    lat: 36.323
+    lon: 74.661
+    gmaps: "https://www.google.com/maps/search/?api=1&query=Karimabad%2C+Hunza"
+    blurb: "Down the Karakoram Highway under 7,000 m peaks."
+
+  - name: "Lahore"
+    country: "Pakistan"
+    lat: 31.558
+    lon: 74.350
+    blurb: "Down off the Karakoram; the Wagah border ceremony is next door."
+
+  - name: "Agra"
+    country: "India"
+    lat: 27.177
+    lon: 78.008
+    blurb: "Obligatory Taj Mahal stop — some clichés earn their place."
+
+  - name: "Kathmandu"
+    country: "Nepal"
+    lat: 27.717
+    lon: 85.324
+    blurb: "Service the bikes and solve the gap: China transit or air freight."
+
+  - name: "Luang Prabang"
+    country: "Laos"
+    lat: 19.885
+    lon: 102.135
+    blurb: "Mekong towns and the run-up to the Thai border."
+
+  - name: "Chiang Mai"
+    country: "Thailand"
+    lat: 18.788
+    lon: 98.985
+    blurb: "FVP stamped, Thai roads at last. Khao soi refuelling."
+
+  - name: "Bangkok"
+    country: "Thailand"
+    lat: 13.756
+    lon: 100.502
+    blurb: "Big-city admin stop before the final push south."
+
+  - name: "Kohub, Koh Lanta"
+    country: "Thailand"
+    lat: 7.607
+    lon: 99.036
+    blurb: "The finish line: park the bikes, open the laptops."

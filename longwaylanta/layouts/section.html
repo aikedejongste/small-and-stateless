@@ -1,0 +1,17 @@
+{{ define "main" }}
+  <section class="section page-section">
+    <div class="container narrow">
+      <h1>{{ .Title }}<span class="accent">.</span></h1>
+      <div class="prose section-intro">{{ .Content }}</div>
+      <div class="faq-list faq-list-page">
+        {{ range .RegularPages }}
+        <a class="faq-item" href="{{ .RelPermalink }}">
+          <h3>{{ .Title }}</h3>
+          <p>{{ .Params.summary }}</p>
+          <span class="faq-more">Read the reasoning →</span>
+        </a>
+        {{ end }}
+      </div>
+    </div>
+  </section>
+{{ end }}
