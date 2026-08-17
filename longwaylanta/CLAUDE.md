@@ -47,9 +47,7 @@ If you must pass a string to `relURL`, write it **without** the leading slash.
 
 There is no pipeline in this directory. The repo-root workflow
 (`.github/workflows/deploy.yml`) builds this site into `dist/longwaylanta` and
-publishes the whole of `dist/` to GitHub Pages on every push to `main`. The
-`.gitlab-ci.yml` here is left over from the old standalone GitLab repo and does
-nothing now.
+publishes the whole of `dist/` to GitHub Pages on every push to `main`.
 
 To preview exactly what ships, build from the repo root — see the root
 `CLAUDE.md`. A plain `hugo server` in this directory serves from `/` instead of
