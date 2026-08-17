@@ -41,6 +41,12 @@ sentences, and three tags. Two conventions matter:
   rules, words, places). Read the app before describing it rather than guessing
   from the directory name.
 
+## No pull requests
+
+Commit straight to `main` and push. Don't open a PR, and don't work on a branch
+unless asked to — this is a one-person repo and review adds nothing. Since every
+push to `main` deploys, check the change locally first (see below).
+
 ## Deployment
 
 `.github/workflows/deploy.yml` runs on every push to `main`, plus manual
