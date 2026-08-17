@@ -22,7 +22,7 @@
     <div id="route-map" data-route="{{ "route.geojson" | relURL }}" aria-label="Map of the route from Den Bosch to Koh Lanta"></div>
     <div class="container map-legend">
       <span><i class="swatch swatch-planned"></i> Planned route</span>
-      <span><i class="swatch swatch-open"></i> Undecided — see <a href="{{ "/faq/" | relURL }}">Q&amp;A</a></span>
+      <span><i class="swatch swatch-open"></i> Undecided — see <a href="{{ (site.GetPage "/faq").RelPermalink }}">Q&amp;A</a></span>
       <span class="muted">Click the map to enable scroll zoom.</span>
     </div>
   </section>

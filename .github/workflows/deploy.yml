@@ -29,11 +29,33 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      # The site is plain static files, so the repo root is the artifact.
+      - name: Install Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.154.5'
+          extended: true
+
+      # Everything except longwaylanta/ is plain static files that ship as-is;
+      # longwaylanta/ is Hugo source and must be built rather than copied.
+      - name: Assemble site
+        run: |
+          mkdir -p dist
+          tar -cf - \
+            --exclude=./.git \
+            --exclude=./.github \
+            --exclude=./.gitignore \
+            --exclude=./dist \
+            --exclude=./longwaylanta \
+            --exclude=CLAUDE.md \
+            . | tar -xf - -C dist
+          hugo --gc --minify \
+            --source longwaylanta \
+            --destination "$GITHUB_WORKSPACE/dist/longwaylanta"
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: dist
 
       - name: Deploy
         id: deployment

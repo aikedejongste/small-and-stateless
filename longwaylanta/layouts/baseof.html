@@ -17,13 +17,13 @@
 <body>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="{{ "/" | relURL }}">Long Way <em>Lanta</em></a>
+      <a class="brand" href="{{ site.Home.RelPermalink }}">Long Way <em>Lanta</em></a>
       <nav class="site-nav">
-        <a href="{{ "/" | relURL }}#route">Route</a>
-        <a href="{{ "/" | relURL }}#plan">Plan</a>
-        <a href="{{ "/" | relURL }}#bikes">Bikes</a>
-        <a href="{{ "/" | relURL }}#stops">Stops</a>
-        <a href="{{ "/faq/" | relURL }}">Q&amp;A</a>
+        <a href="{{ site.Home.RelPermalink }}#route">Route</a>
+        <a href="{{ site.Home.RelPermalink }}#plan">Plan</a>
+        <a href="{{ site.Home.RelPermalink }}#bikes">Bikes</a>
+        <a href="{{ site.Home.RelPermalink }}#stops">Stops</a>
+        <a href="{{ (site.GetPage "/faq").RelPermalink }}">Q&amp;A</a>
       </nav>
     </div>
   </header>

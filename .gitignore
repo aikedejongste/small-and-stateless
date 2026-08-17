@@ -1,0 +1,2 @@
+# Assembled site, produced by .github/workflows/deploy.yml
+dist/
