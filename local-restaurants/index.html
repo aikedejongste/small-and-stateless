@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<title>Buurt-eetgids — Maaspoort & de Maas</title>
+
+<!-- ===================== Leaflet (map library, no API key needed) ===================== -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<!-- ===================== Fonts ===================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* =================================================================
+   HOW TO EDIT YOUR PLACES
+   -----------------------------------------------------------------
+   Scroll down to the big "const RESTAURANTS = [ ... ]" list in the
+   <script> at the bottom. Each restaurant is one { ... } block.
+   Copy a block, change the fields, done. To add a new place you only
+   really need: name, area, lat, lng. Get lat/lng by right-clicking a
+   spot in Google Maps -> the two numbers at the top are lat, lng.
+
+   The "note" and "rating" fields are yours to fill in. The notes
+   that are in there now are short factual starters (cuisine + setting)
+   pulled from public info — replace them with what YOU think.
+
+   You can also edit notes/ratings live on the page (the "Edit" button
+   on a place), then press "Copy list" up top and paste it back here.
+   ================================================================= */
+
+:root{
+  --paper:#E7E9E2;        /* cool river-light background */
+  --paper-2:#F4F4EF;      /* cards */
+  --paper-3:#FBFBF8;      /* raised */
+  --ink:#16201D;          /* deep reed near-black */
+  --ink-soft:#53615B;
+  --ink-faint:#8A968F;
+  --river:#1E6F6A;        /* primary teal */
+  --river-deep:#114E4B;
+  --reed:#7E8C52;         /* muted polder green */
+  --brick:#BE5430;        /* selection / active pin — used sparingly */
+  --brick-deep:#9A3F20;
+  --line:rgba(22,32,29,0.12);
+  --line-2:rgba(22,32,29,0.07);
+  --shadow:0 1px 2px rgba(22,32,29,.05), 0 8px 24px rgba(22,32,29,.08);
+  --shadow-lg:0 2px 6px rgba(22,32,29,.08), 0 20px 48px rgba(22,32,29,.16);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:"Inter",system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--paper);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.app{display:flex;flex-direction:column;height:100dvh;min-height:0}
+
+/* ===================== Header ===================== */
+header{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+  padding:16px 22px 14px;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;flex-direction:column;gap:3px;min-width:0}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--river);display:flex;align-items:center;gap:8px;
+}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--brick);display:inline-block}
+h1{
+  margin:0;font-family:"Bricolage Grotesque",sans-serif;font-weight:600;
+  font-size:clamp(22px,3.4vw,32px);line-height:1;letter-spacing:-.01em;
+}
+h1 em{font-style:normal;color:var(--river)}
+.sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+
+.head-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.count{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-soft);
+  white-space:nowrap;
+}
+.count b{color:var(--ink);font-weight:500}
+.btn{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.02em;
+  border:1px solid var(--line);background:var(--paper-3);color:var(--ink);
+  padding:8px 12px;border-radius:8px;cursor:pointer;transition:all .15s ease;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.btn:hover{border-color:var(--river);color:var(--river)}
+.btn svg{width:13px;height:13px}
+
+/* ===================== Stage (list | map) ===================== */
+.stage{
+  flex:1;min-height:0;display:grid;
+  grid-template-columns:minmax(330px,42%) 1fr;
+}
+
+/* --- List column --- */
+.list-col{
+  display:flex;flex-direction:column;min-height:0;
+  border-right:1px solid var(--line);background:var(--paper);
+}
+.controls{
+  padding:14px 18px 10px;border-bottom:1px solid var(--line-2);
+  background:var(--paper);position:sticky;top:0;z-index:3;
+}
+.search{position:relative}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--ink-faint)}
+.search input{
+  width:100%;font-family:"Inter",sans-serif;font-size:14px;color:var(--ink);
+  padding:11px 12px 11px 36px;border:1px solid var(--line);border-radius:10px;
+  background:var(--paper-3);outline:none;transition:border-color .15s ease;
+}
+.search input:focus{border-color:var(--river)}
+.search input::placeholder{color:var(--ink-faint)}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.chip{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.02em;
+  padding:5px 10px;border-radius:999px;border:1px solid var(--line);
+  background:transparent;color:var(--ink-soft);cursor:pointer;transition:all .14s ease;
+}
+.chip:hover{border-color:var(--river);color:var(--river)}
+.chip.active{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
+
+.list{overflow-y:auto;flex:1;padding:8px 10px 24px;min-height:0}
+.list-empty{padding:30px 18px;color:var(--ink-soft);font-size:13.5px;text-align:center;line-height:1.6}
+
+.card{
+  display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:start;
+  padding:13px 12px;border-radius:12px;cursor:pointer;
+  border:1px solid transparent;transition:background .14s ease,border-color .14s ease;
+}
+.card:hover{background:var(--paper-2)}
+.card.active{background:var(--paper-3);border-color:var(--river)}
+.card.active .idx{background:var(--brick);color:#fff;border-color:var(--brick)}
+
+.idx{
+  width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
+  background:var(--paper-2);color:var(--river-deep);border:1px solid var(--line);
+  transition:all .14s ease;margin-top:1px;
+}
+.card-main{min-width:0}
+.card-name{
+  font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:15.5px;
+  line-height:1.2;letter-spacing:-.005em;margin-bottom:3px;
+}
+.card-meta{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft);
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+}
+.card-meta .sep{color:var(--ink-faint)}
+.card-area{color:var(--river)}
+.card-cuisine{color:var(--ink-soft)}
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;padding-top:2px}
+.price{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--reed);letter-spacing:1px}
+.dots{display:flex;gap:2px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line);display:block}
+.dots i.on{background:var(--brick)}
+
+/* --- Map column --- */
+.map-col{position:relative;background:#dfe2dc;min-height:0}
+#map{position:absolute;inset:0}
+.leaflet-container{background:#dfe2dc;font-family:"Inter",sans-serif}
+.leaflet-control-attribution{font-size:10px;background:rgba(251,251,248,.82)}
+.leaflet-bar a{color:var(--ink)}
+
+/* Custom pins */
+.pin{
+  position:relative;width:26px;height:26px;border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);background:var(--river);border:2px solid #fff;
+  box-shadow:0 3px 8px rgba(22,32,29,.35);cursor:pointer;
+  transition:transform .16s ease, background .16s ease;
+  display:grid;place-items:center;
+}
+.pin span{
+  transform:rotate(45deg);font-family:"IBM Plex Mono",monospace;font-size:11px;
+  font-weight:500;color:#fff;line-height:1;
+}
+.pin:hover{transform:rotate(-45deg) scale(1.12)}
+.pin.is-active{background:var(--brick);z-index:1000;transform:rotate(-45deg) scale(1.18)}
+.pin.is-active.bump{animation:bump .5s ease}
+@keyframes bump{0%{transform:rotate(-45deg) scale(1.18)}40%{transform:rotate(-45deg) scale(1.4)}100%{transform:rotate(-45deg) scale(1.18)}}
+.pin-wrap.hidden{display:none}
+
+.home-pin{
+  width:18px;height:18px;border-radius:50%;background:var(--paper-3);
+  border:3px solid var(--ink);box-shadow:0 2px 6px rgba(22,32,29,.3);
+}
+.home-label{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink);background:var(--paper-3);
+  padding:2px 6px;border-radius:5px;border:1px solid var(--line);
+  white-space:nowrap;box-shadow:0 1px 3px rgba(22,32,29,.15);transform:translate(12px,-9px);
+}
+
+/* mobile list/map toggle */
+.view-toggle{display:none}
+
+/* ===================== Detail box (full width, bottom) ===================== */
+.detail{
+  background:var(--paper-3);border-top:1px solid var(--line);
+  box-shadow:0 -8px 24px rgba(22,32,29,.06);
+  max-height:36vh;overflow-y:auto;
+  transition:max-height .25s ease;
+}
+.detail.empty{max-height:54px;overflow:hidden}
+.detail-inner{padding:16px 22px 20px;max-width:1100px}
+
+.detail-prompt{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-soft);
+  display:flex;align-items:center;gap:9px;height:54px;padding:0 22px;
+}
+.detail-prompt .dot{width:6px;height:6px;border-radius:50%;background:var(--river)}
+
+.detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.detail-title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(20px,2.6vw,26px);line-height:1.05;letter-spacing:-.01em}
+.detail-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.tag{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.03em;
+  padding:3px 8px;border-radius:999px;background:rgba(126,140,82,.14);color:var(--reed);
+}
+.detail-actions{display:flex;gap:8px;flex-shrink:0}
+
+.detail-meta{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-soft);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:11px;
+}
+.detail-meta .k{color:var(--ink-faint)}
+.detail-meta a{color:var(--river);text-decoration:none;border-bottom:1px solid transparent}
+.detail-meta a:hover{border-bottom-color:var(--river)}
+.detail-meta .sep{color:var(--line)}
+
+.note{
+  margin-top:14px;font-size:15px;line-height:1.6;color:var(--ink);
+  max-width:62ch;
+}
+.note.placeholder{color:var(--ink-faint);font-style:italic}
+
+.rating-row{display:flex;align-items:center;gap:12px;margin-top:14px}
+.rating-label{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint)}
+.bigdots{display:flex;gap:5px}
+.bigdots i{width:13px;height:13px;border-radius:50%;background:var(--line);cursor:default;transition:transform .12s ease}
+.bigdots i.on{background:var(--brick)}
+.bigdots.editable i{cursor:pointer}
+.bigdots.editable i:hover{transform:scale(1.25)}
+
+/* edit mode */
+.edit-area{margin-top:14px;display:none}
+.edit-area.show{display:block}
+.edit-area textarea{
+  width:100%;max-width:62ch;min-height:80px;resize:vertical;
+  font-family:"Inter",sans-serif;font-size:14.5px;line-height:1.55;color:var(--ink);
+  padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--paper-2);outline:none;
+}
+.edit-area textarea:focus{border-color:var(--river)}
+.edit-hint{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-faint);margin-top:7px}
+
+.detail-static .edit-area{display:none}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--paper-2);font-size:13px;
+  padding:11px 18px;border-radius:10px;box-shadow:var(--shadow-lg);
+  opacity:0;pointer-events:none;transition:all .25s ease;z-index:9999;max-width:88vw;
+  font-family:"IBM Plex Mono",monospace;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===================== Responsive ===================== */
+@media (max-width:820px){
+  header{flex-wrap:wrap;gap:10px;padding:13px 16px 11px}
+  .head-right{order:3;width:100%;justify-content:space-between}
+  .stage{grid-template-columns:1fr;position:relative}
+  .list-col{border-right:none}
+  .list-col,.map-col{grid-column:1;grid-row:1}
+  .stage[data-view="list"] .map-col{display:none}
+  .stage[data-view="map"] .list-col{display:none}
+  .view-toggle{
+    display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;
+  }
+  .view-toggle button{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;border:none;background:var(--paper-3);
+    color:var(--ink-soft);padding:8px 16px;cursor:pointer;
+  }
+  .view-toggle button.active{background:var(--ink);color:var(--paper-2)}
+  .detail{max-height:46vh}
+  .detail.empty{max-height:50px}
+  .detail-prompt{height:50px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="eyebrow"><span class="dot"></span> Maaspoort · 's-Hertogenbosch</div>
+      <h1>Buurt-<em>eetgids</em></h1>
+      <div class="sub">Mijn eigen lijst — eettentjes in de buurt en langs de Maas</div>
+    </div>
+    <div class="head-right">
+      <div class="view-toggle" role="tablist" aria-label="Lijst of kaart">
+        <button id="vt-list" class="active">Lijst</button>
+        <button id="vt-map">Kaart</button>
+      </div>
+      <span class="count"><b id="count">0</b> tentjes</span>
+      <button class="btn" id="copyBtn" title="Kopieer de bijgewerkte lijst om terug in het bestand te plakken">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copy list
+      </button>
+    </div>
+  </header>
+
+  <div class="stage" data-view="list" id="stage">
+    <div class="list-col">
+      <div class="controls">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="text" placeholder="Zoek op naam, dorp of keuken…" autocomplete="off" />
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="map-col">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <div class="detail empty" id="detail">
+    <div class="detail-prompt" id="detailPrompt">
+      <span class="dot"></span> Kies een tentje uit de lijst of tik op een speld op de kaart
+    </div>
+    <div class="detail-inner" id="detailInner" style="display:none"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =================================================================
+   ▼▼▼  JOUW RESTAURANTS  ▼▼▼
+   Edit / add here. Fields:
+     name   – restaurant name
+     area   – village/neighbourhood (also used for the filter chips)
+     cuisine– short label e.g. "Italiaans", "Brasserie"
+     price  – 1, 2 or 3  (shown as € / €€ / €€€)   (optional)
+     address– street + town
+     lat,lng– coordinates (right-click in Google Maps to get them)
+     rating – YOUR score 0–5 (0 = not rated yet)
+     note   – YOUR comment (starters below are factual placeholders)
+     tags   – small labels, optional, e.g. ["aan het water","terras"]
+   ================================================================= */
+const RESTAURANTS = [
+  // ---- Maaspoort ----
+  { name:"Brasserie La Porte", area:"Maaspoort", cuisine:"Brasserie", price:1,
+    address:"Maaspoortweg 207, 's-Hertogenbosch", lat:51.725347, lng:5.3085819, rating:0,
+    note:"Knusse brasserie verstopt in Maaspoort — alleen 's avonds open, prima prijs.", tags:["dinner","budget"] },
+  { name:"Restaurant de Blauwe Sluis", area:"Maaspoort", cuisine:"Bar / grill", price:2,
+    address:"Krommenhoek 11, 's-Hertogenbosch", lat:51.7530962, lng:5.3513825, rating:0,
+    note:"Aan het water bij de sluis — kom voor het uitzicht over de Maas, eten is oké.", tags:["aan het water","terras"] },
+  { name:"Santa Maria", area:"Maaspoort", cuisine:"Italiaans / pizza", price:1,
+    address:"Goulmy en Baarplein 84, 's-Hertogenbosch", lat:51.7277724, lng:5.2901608, rating:0,
+    note:"Pizza & pasta om de hoek — degelijke afhaaloptie in de wijk.", tags:["afhaal"] },
+  { name:"Bowling & Partycentrum Maaspoort", area:"Maaspoort", cuisine:"Diner / bowlen", price:1,
+    address:"Marathonloop 3, 's-Hertogenbosch", lat:51.7221145, lng:5.3156133, rating:0,
+    note:"Bowlingbaan met keuken — meer voor een leuke avond dan voor het eten.", tags:["familie"] },
+
+  // ---- Empel ----
+  { name:"Café Bonjour", area:"Empel", cuisine:"Frans bistro", price:2,
+    address:"Burgemeester Godschalxstraat 40, 's-Hertogenbosch", lat:51.7306059, lng:5.3259886, rating:0,
+    note:"Franse bistro in Empel — kleine gerechten, kan druk en rumoerig worden.", tags:["bistro"] },
+  { name:"Eetcafé De Ster", area:"Empel", cuisine:"Eetcafé", price:1,
+    address:"Burgemeester de Bekkerstraat 29, 's-Hertogenbosch", lat:51.7306691, lng:5.3232994, rating:0,
+    note:"Ouderwets eetcafé — biefstuk met friet, vriendelijke vaste klanten.", tags:["eetcafé"] },
+
+  // ---- Engelen / Bokhoven ----
+  { name:"Mimoenke", area:"Engelen", cuisine:"Marokkaans", price:1,
+    address:"Oude Engelenseweg 6-8, 's-Hertogenbosch", lat:51.6985426, lng:5.2934974, rating:0,
+    note:"Klein Marokkaans tentje — ontbijt en lunch, met veel hart gerund.", tags:["lunch"] },
+  { name:"Restaurant Magnolia's", area:"Engelen", cuisine:"Lunch", price:2,
+    address:"Leunweg 40, 's-Hertogenbosch (Haverleij)", lat:51.724527, lng:5.25512, rating:0,
+    note:"Lunchplek bij de golfbaan — lichte kaart, mooie omgeving.", tags:["lunch","uitzicht"] },
+  { name:"Het Veerhuis Bokhoven", area:"Bokhoven", cuisine:"Grand café", price:2,
+    address:"Bokhovense Maasdijk 12, 's-Hertogenbosch", lat:51.7355249, lng:5.2393709, rating:0,
+    note:"Veerhuis op de Maasdijk — groot terras aan het water, comfort food.", tags:["aan het water","terras"] },
+
+  // ---- Rosmalen ----
+  { name:"Montimar", area:"Rosmalen", cuisine:"Mediterraans", price:1,
+    address:"Hintham 102, Rosmalen", lat:51.7008347, lng:5.3428024, rating:0,
+    note:"Mediterraans, top prijs-kwaliteit — populair, dus ruim op tijd reserveren.", tags:["reserveren"] },
+  { name:"Wapen van Rosmalen", area:"Rosmalen", cuisine:"Aziatisch buffet", price:2,
+    address:"Graafsebaan 52, Rosmalen", lat:51.7042869, lng:5.362888, rating:0,
+    note:"Groot Aziatisch buffet — all-you-can-eat, kom hongerig en met een plan.", tags:["buffet","familie"] },
+  { name:"ICHI Rosmalen", area:"Rosmalen", cuisine:"Asian fusion", price:2,
+    address:"Sparrenburgstraat 9, Rosmalen", lat:51.7171324, lng:5.3812824, rating:0,
+    note:"Asian fusion — fris, goede kwaliteit, mooie zaak.", tags:["fusion"] },
+  { name:"De Villa Rosmalen", area:"Rosmalen", cuisine:"Restaurant", price:2,
+    address:"De Driesprong 11, Rosmalen", lat:51.7169785, lng:5.3635188, rating:0,
+    note:"Warme villasfeer — huiselijke lunch en diner.", tags:["sfeer"] },
+  { name:"Brasserie Pastis", area:"Rosmalen", cuisine:"Brasserie / sushi", price:3,
+    address:"Vlietdijk 3, Rosmalen", lat:51.7251765, lng:5.3607522, rating:0,
+    note:"Stijlvolle brasserie iets buitenaf — ook sushi, makkelijk parkeren.", tags:["terras","parkeren"] },
+  { name:"Restaurant 't Vosje De Driesprong", area:"Rosmalen", cuisine:"Restaurant", price:2,
+    address:"De Driesprong 38, Rosmalen", lat:51.7172698, lng:5.3625526, rating:0,
+    note:"De hele dag open — burgers en carpaccio, fijn met een groep.", tags:["groep"] },
+
+  // ---- Hedel ----
+  { name:"Herberg de Zwaan", area:"Hedel", cuisine:"Herberg", price:2,
+    address:"Voorstraat 8, Hedel", lat:51.7437096, lng:5.2620516, rating:0,
+    note:"Dorpsherberg — eerlijk geprijsd eten, en er zijn kamers als je blijft.", tags:["herberg"] },
+  { name:"De Lotus", area:"Hedel", cuisine:"Chinees / Kantonees", price:2,
+    address:"Stationsweg 1, Hedel", lat:51.7515333, lng:5.2717472, rating:0,
+    note:"Betrouwbare Chinees — de babi pangang wordt er vaak uitgelicht.", tags:["afhaal"] },
+
+  // ---- Ammerzoden ----
+  { name:"Restaurant ProeV", area:"Ammerzoden", cuisine:"Klein & fijn", price:2,
+    address:"Voorstraat 13, Ammerzoden", lat:51.7483737, lng:5.2249032, rating:0,
+    note:"Kleine gerechten / verrassingsmenu — boek 'm voor een rustige avond.", tags:["menu"] },
+  { name:"Het Oude Veerhuis", area:"Ammerzoden", cuisine:"Vis", price:3,
+    address:"Molendijk 1, Ammerzoden", lat:51.7453919, lng:5.2217681, rating:0,
+    note:"Vishuis aan de Maas — kom voor de tong, en neem de tijd.", tags:["aan het water","vis"] },
+  { name:"Brasserie 't Centrum", area:"Ammerzoden", cuisine:"Brasserie", price:2,
+    address:"Kerkstraat 3, Ammerzoden", lat:51.7486399, lng:5.2244929, rating:0,
+    note:"Vriendelijke allrounder bij het kasteel — goede lunch.", tags:["lunch"] },
+
+  // ---- Kerkdriel / Maasdriel ----
+  { name:"NUL418", area:"Kerkdriel", cuisine:"Bistro", price:2,
+    address:"Mgr. Zwijsenplein 17, Kerkdriel", lat:51.7729552, lng:5.3409977, rating:0,
+    note:"Frisse jonge bistro — gevarieerde kaart, goede prijs-kwaliteit.", tags:["bistro"] },
+  { name:"Restaurant De Engel", area:"Kerkdriel", cuisine:"Nederlands", price:2,
+    address:"Nieuwstraat 3, Kerkdriel", lat:51.7737557, lng:5.3405041, rating:0,
+    note:"Klassiek Nederlands diner — goed geregeld, kan luid en wat donker zijn.", tags:["klassiek"] },
+  { name:"Osteria 47", area:"Kerkdriel", cuisine:"Italiaans", price:2,
+    address:"Berm 47, Kerkdriel", lat:51.7850066, lng:5.3223282, rating:0,
+    note:"Sfeervolle Italiaan — laat de chef je verrassen, kaarsen en haardvuur.", tags:["sfeer","aan het water"] },
+  { name:"Restaurant Dukdalf", area:"Kerkdriel", cuisine:"Restaurant", price:2,
+    address:"Zandstraat 9, Kerkdriel", lat:51.7664953, lng:5.3516943, rating:0,
+    note:"Aan de haven — mooi uitzicht, sushi; bediening kan wat afdwalen.", tags:["aan het water","haven"] },
+];
+
+/* "You are here" — Maaspoort centre (move/remove if you like) */
+const HOME = { lat:51.7268, lng:5.3055, label:"Thuis · Maaspoort" };
+
+/* =================================================================
+   ▲▲▲  END OF EDITABLE DATA — app logic below  ▲▲▲
+   ================================================================= */
+
+RESTAURANTS.forEach((r,i)=> r._id = i);
+
+const priceStr = p => p ? "€".repeat(p) : "";
+const state = { selected:null, area:"all", q:"" };
+const markers = {};
+let map, lastBumped = null;
+
+/* ---------- Map ---------- */
+function initMap(){
+  map = L.map('map',{ zoomControl:true, scrollWheelZoom:true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; OpenStreetMap &copy; CARTO', subdomains:'abcd', maxZoom:19
+  }).addTo(map);
+
+  // home marker
+  const homeIcon = L.divIcon({ className:'', html:
+    `<div style="display:flex;align-items:center"><div class="home-pin"></div><div class="home-label">${HOME.label}</div></div>`,
+    iconSize:[18,18], iconAnchor:[9,9] });
+  L.marker([HOME.lat,HOME.lng],{icon:homeIcon, interactive:false, keyboard:false}).addTo(map);
+
+  RESTAURANTS.forEach(r=>{
+    const icon = L.divIcon({
+      className:'pin-wrap',
+      html:`<div class="pin"><span>${r._id+1}</span></div>`,
+      iconSize:[26,26], iconAnchor:[13,26]
+    });
+    const m = L.marker([r.lat,r.lng],{icon}).addTo(map);
+    m.on('click', ()=> select(r._id, {fromMap:true}));
+    markers[r._id] = m;
+  });
+
+  fitToVisible(RESTAURANTS);
+}
+
+function fitToVisible(items){
+  const pts = items.map(r=>[r.lat,r.lng]);
+  pts.push([HOME.lat,HOME.lng]);
+  if(pts.length){
+    map.fitBounds(L.latLngBounds(pts), { padding:[48,48], maxZoom:14 });
+  }
+}
+
+/* ---------- Filtering ---------- */
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  return RESTAURANTS.filter(r=>{
+    if(state.area!=="all" && r.area!==state.area) return false;
+    if(!q) return true;
+    return (r.name+" "+r.area+" "+r.cuisine+" "+(r.tags||[]).join(" ")).toLowerCase().includes(q);
+  });
+}
+
+/* ---------- Render list ---------- */
+function dots(n){
+  let s='<div class="dots">';
+  for(let i=1;i<=5;i++) s+=`<i class="${i<=n?'on':''}"></i>`;
+  return s+'</div>';
+}
+function renderList(){
+  const items = filtered();
+  const list = document.getElementById('list');
+  document.getElementById('count').textContent = items.length;
+
+  if(!items.length){
+    list.innerHTML = `<div class="list-empty">Niets gevonden hier.<br>Pas je zoekopdracht of het dorp-filter aan.</div>`;
+  } else {
+    list.innerHTML = items.map(r=>`
+      <div class="card ${state.selected===r._id?'active':''}" data-id="${r._id}" role="button" tabindex="0">
+        <div class="idx">${r._id+1}</div>
+        <div class="card-main">
+          <div class="card-name">${r.name}</div>
+          <div class="card-meta">
+            <span class="card-area">${r.area}</span>
+            <span class="sep">·</span>
+            <span class="card-cuisine">${r.cuisine||''}</span>
+          </div>
+        </div>
+        <div class="card-right">
+          <div class="price">${priceStr(r.price)}</div>
+          ${r.rating?dots(r.rating):''}
+        </div>
+      </div>`).join('');
+    list.querySelectorAll('.card').forEach(c=>{
+      const id = +c.dataset.id;
+      c.addEventListener('click', ()=> select(id,{fromList:true}));
+      c.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();select(id,{fromList:true});}});
+    });
+  }
+
+  // map pin visibility follows the filter
+  const visibleIds = new Set(items.map(r=>r._id));
+  RESTAURANTS.forEach(r=>{
+    const el = markers[r._id].getElement();
+    if(el) el.classList.toggle('hidden', !visibleIds.has(r._id));
+  });
+  if(items.length) fitToVisible(items);
+}
+
+/* ---------- Chips ---------- */
+function renderChips(){
+  const areas = [...new Set(RESTAURANTS.map(r=>r.area))];
+  const chips = document.getElementById('chips');
+  const all = `<button class="chip ${state.area==='all'?'active':''}" data-area="all">Alles</button>`;
+  chips.innerHTML = all + areas.map(a=>
+    `<button class="chip ${state.area===a?'active':''}" data-area="${a}">${a}</button>`).join('');
+  chips.querySelectorAll('.chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{
+      state.area = ch.dataset.area;
+      renderChips(); renderList();
+    });
+  });
+}
+
+/* ---------- Select + detail ---------- */
+function select(id, opts={}){
+  state.selected = id;
+  const r = RESTAURANTS[id];
+
+  // list highlight
+  document.querySelectorAll('.card').forEach(c=> c.classList.toggle('active', +c.dataset.id===id));
+  const card = document.querySelector(`.card[data-id="${id}"]`);
+  if(card && opts.fromMap) card.scrollIntoView({behavior:'smooth', block:'nearest'});
+
+  // pin active state
+  Object.entries(markers).forEach(([mid,m])=>{
+    const el = m.getElement(); if(!el) return;
+    const pin = el.querySelector('.pin');
+    if(pin) pin.classList.toggle('is-active', +mid===id);
+  });
+  if(lastBumped!==id){
+    const el = markers[id].getElement();
+    const pin = el && el.querySelector('.pin');
+    if(pin){ pin.classList.add('bump'); setTimeout(()=>pin.classList.remove('bump'),520); }
+    lastBumped = id;
+  }
+
+  // mobile: jump to map so the pin is visible
+  const onMobile = window.matchMedia('(max-width:820px)').matches;
+  if(onMobile && opts.fromList) setView('map');
+
+  map.flyTo([r.lat,r.lng], Math.max(map.getZoom(),14), {duration:.6});
+  setTimeout(()=>map.invalidateSize(),650);
+
+  renderDetail(r);
+}
+
+function renderDetail(r){
+  const detail = document.getElementById('detail');
+  const prompt = document.getElementById('detailPrompt');
+  const inner = document.getElementById('detailInner');
+  detail.classList.remove('empty');
+  prompt.style.display='none';
+  inner.style.display='block';
+
+  const gmaps = `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lng}`;
+  const noteIsStarter = !r._edited;
+  inner.innerHTML = `
+    <div class="detail-static">
+      <div class="detail-head">
+        <div>
+          <div class="detail-title">${r.name}</div>
+          ${(r.tags&&r.tags.length)?`<div class="detail-tags">${r.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`:''}
+        </div>
+        <div class="detail-actions">
+          <button class="btn" id="editBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Edit
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-meta">
+        <span class="card-area">${r.area}</span><span class="sep">|</span>
+        <span>${r.cuisine||''}</span>
+        ${r.price?`<span class="sep">|</span><span class="price">${priceStr(r.price)}</span>`:''}
+        <span class="sep">|</span>
+        <span class="k">${r.address||''}</span>
+        <span class="sep">|</span>
+        <a href="${gmaps}" target="_blank" rel="noopener">Route in Google Maps ↗</a>
+      </div>
+
+      <div class="rating-row">
+        <span class="rating-label">Mijn cijfer</span>
+        <div class="bigdots" id="bigdots">${[1,2,3,4,5].map(i=>`<i class="${i<=(r.rating||0)?'on':''}" data-v="${i}"></i>`).join('')}</div>
+      </div>
+
+      <div class="note ${(!r.note)?'placeholder':''} ${noteIsStarter?'':''}" id="noteView">${r.note ? r.note : 'Nog geen notitie — tik op Edit om je eigen comment te schrijven.'}</div>
+
+      <div class="edit-area" id="editArea">
+        <textarea id="noteEdit" placeholder="Wat vond jij ervan?">${r.note||''}</textarea>
+        <div class="edit-hint">Tip: klik op de bolletjes hierboven om je cijfer te zetten. Klaar? Druk op “Copy list” bovenin om alles terug in je bestand te plakken.</div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn" id="saveBtn" style="border-color:var(--river);color:var(--river)">Opslaan</button>
+          <button class="btn" id="cancelBtn">Annuleren</button>
+        </div>
+      </div>
+    </div>`;
+
+  // edit toggling
+  const editBtn = inner.querySelector('#editBtn');
+  const editArea = inner.querySelector('#editArea');
+  const noteView = inner.querySelector('#noteView');
+  const bigdots = inner.querySelector('#bigdots');
+
+  editBtn.addEventListener('click', ()=>{
+    const showing = editArea.classList.toggle('show');
+    noteView.style.display = showing ? 'none':'block';
+    bigdots.classList.toggle('editable', showing);
+    if(showing) inner.querySelector('#noteEdit').focus();
+  });
+  inner.querySelector('#cancelBtn').addEventListener('click', ()=>{
+    editArea.classList.remove('show'); noteView.style.display='block'; bigdots.classList.remove('editable');
+  });
+  inner.querySelector('#saveBtn').addEventListener('click', ()=>{
+    r.note = inner.querySelector('#noteEdit').value.trim();
+    r._edited = true;
+    editArea.classList.remove('show');
+    renderDetail(r); renderList();
+    toast('Opgeslagen in deze sessie — druk op “Copy list” om te bewaren');
+  });
+
+  // clickable rating dots (only meaningful in edit mode, but allow anytime)
+  bigdots.querySelectorAll('i').forEach(d=>{
+    d.addEventListener('click', ()=>{
+      if(!bigdots.classList.contains('editable')) return;
+      const v = +d.dataset.v;
+      r.rating = (r.rating===v) ? v-1 : v;  // click same again to lower
+      r._edited = true;
+      renderDetail(r); renderList();
+      // keep edit mode open
+      const ea=document.getElementById('editArea'); if(ea){ea.classList.add('show');document.getElementById('bigdots').classList.add('editable');document.getElementById('noteView').style.display='none';}
+    });
+  });
+}
+
+/* ---------- Copy data back out ---------- */
+function copyList(){
+  const clean = RESTAURANTS.map(r=>{
+    const o = { name:r.name, area:r.area, cuisine:r.cuisine, price:r.price,
+                address:r.address, lat:r.lat, lng:r.lng, rating:r.rating, note:r.note };
+    if(r.tags && r.tags.length) o.tags = r.tags;
+    return o;
+  });
+  const text = "const RESTAURANTS = " + JSON.stringify(clean, null, 2) + ";";
+  navigator.clipboard.writeText(text).then(
+    ()=> toast('Lijst gekopieerd — plak het over je RESTAURANTS-blok in het bestand'),
+    ()=> toast('Kopiëren lukte niet — selecteer handmatig in de console')
+  );
+}
+
+/* ---------- Mobile view toggle ---------- */
+function setView(v){
+  document.getElementById('stage').dataset.view = v;
+  document.getElementById('vt-list').classList.toggle('active', v==='list');
+  document.getElementById('vt-map').classList.toggle('active', v==='map');
+  if(v==='map') setTimeout(()=>map.invalidateSize(),60);
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ---------- Wire up ---------- */
+document.getElementById('search').addEventListener('input', e=>{ state.q=e.target.value; renderList(); });
+document.getElementById('copyBtn').addEventListener('click', copyList);
+document.getElementById('vt-list').addEventListener('click', ()=>setView('list'));
+document.getElementById('vt-map').addEventListener('click', ()=>setView('map'));
+window.addEventListener('resize', ()=>{ if(map) map.invalidateSize(); });
+
+initMap();
+renderChips();
+renderList();
+</script>
+</body>
+</html>
