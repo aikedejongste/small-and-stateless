@@ -47,6 +47,20 @@ Commit straight to `main` and push. Don't open a PR, and don't work on a branch
 unless asked to — this is a one-person repo and review adds nothing. Since every
 push to `main` deploys, check the change locally first (see below).
 
+## Apps that live in their own repo
+
+A few listed apps aren't in this repo at all (`cards.aike.be`,
+`aikedejongste.github.io/wifiqr`). They get the same card, with:
+
+- the full URL in `href`, plus `target="_blank" rel="noopener"`
+- the host instead of a `/path` in `.app-path`, followed by
+  `<span class="ext" aria-hidden="true">↗</span>`
+- an `own repo` tag
+
+To describe one accurately, read its repo (`aikedejongste/cards`,
+`aikedejongste/wifiqr`) — the egress proxy blocks the live URLs, so fetching the
+page itself won't work from a sandboxed session.
+
 ## Deployment
 
 `.github/workflows/deploy.yml` runs on every push to `main`, plus manual

@@ -114,6 +114,9 @@
     white-space: nowrap;
   }
 
+  /* Apps that live in their own repo, off this domain */
+  .app-path .ext { color: var(--accent); margin-left: 2px; }
+
   .app p {
     margin-top: 10px;
     color: var(--muted);
@@ -151,6 +154,12 @@
 
   footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
   footer a:hover { color: var(--accent); }
+
+  /* On narrow screens a long path (an external host) would squeeze the title
+     down to one word per line, so stack them instead. */
+  @media (max-width: 560px) {
+    .app-top { flex-direction: column; align-items: flex-start; gap: 4px; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .app { transition: none; }
@@ -270,6 +279,32 @@
         <span class="tag">travel</span>
         <span class="tag">17,000 km</span>
         <span class="tag">hugo</span>
+      </div>
+    </a>
+
+    <a class="app" href="https://cards.aike.be/" target="_blank" rel="noopener">
+      <div class="app-top">
+        <h2>Cards</h2>
+        <span class="app-path">cards.aike.be<span class="ext" aria-hidden="true">↗</span></span>
+      </div>
+      <p>A card game made of conversation starters — 88 questions and no answers. Pick a deck, then swipe through the cards; each player can take on the question showing or deal themselves a new one.</p>
+      <div class="tags">
+        <span class="tag">card game</span>
+        <span class="tag">88 questions</span>
+        <span class="tag">own repo</span>
+      </div>
+    </a>
+
+    <a class="app" href="https://aikedejongste.github.io/wifiqr/" target="_blank" rel="noopener">
+      <div class="app-top">
+        <h2>WiFi QR Codes</h2>
+        <span class="app-path">aikedejongste.github.io/wifiqr<span class="ext" aria-hidden="true">↗</span></span>
+      </div>
+      <p>Turns a network name and password into a printable A4 sheet of four WiFi QR cards, ready to cut into A6 and put up so guests can scan their way onto the network instead of typing the password.</p>
+      <div class="tags">
+        <span class="tag">qr codes</span>
+        <span class="tag">printable pdf</span>
+        <span class="tag">own repo</span>
       </div>
     </a>
 
