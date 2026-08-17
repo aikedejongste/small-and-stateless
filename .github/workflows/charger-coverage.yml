@@ -1,0 +1,38 @@
+name: Generate Fast Charger Coverage
+
+# Manual starts only. The generator is currently broken, and the schedule and
+# push triggers it used to carry in its own repository would fire on every push
+# here. Run it from the Actions tab when you want a fresh report.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Generate fast charger coverage report
+        working-directory: charger-coverage
+        run: |
+          chmod +x run.sh
+          ./run.sh
+
+      # The report is *not* deployed from here. Pages belongs to deploy.yml,
+      # which ships the whole site; publishing from this workflow would replace
+      # the site with this one page. To publish a new report, download the
+      # artifact and commit it as charger-coverage/index.html.
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: charger-coverage-report
+          path: charger-coverage/output/

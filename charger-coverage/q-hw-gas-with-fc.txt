@@ -1,0 +1,9 @@
+[out:json][timeout:60];
+area["ISO3166-1"="NL"]->.searchArea;
+
+nwr["highway"~"services|rest_area"](area.searchArea)->.rest_areas;
+nwr["amenity"="fuel"](area.searchArea)(around.rest_areas:100)->.fuel;
+nwr["amenity"="charging_station"](area.searchArea)(around.rest_areas:100)->.chargers;
+
+node.fuel(around.chargers:100);
+out geom;
