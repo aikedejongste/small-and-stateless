@@ -39,5 +39,5 @@ the numbers can be trusted. The two queries also don't select quite the same
 thing (`q-hw-gas-total.txt` restricts to `motorway=yes` service areas and adds
 stations within 75 m of a motorway way; `q-hw-gas-with-fc.txt` uses all service
 and rest areas with 100 m radii), so the percentage compares two slightly
-different populations. `index.html` is the last report that was published, kept
-as-is.
+different populations. `index.html` is the last report that was published —
+162 of 239 stations, 67.8%, collected 2025-10-08 — kept as-is.
