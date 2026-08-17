@@ -1,2 +1,5 @@
 # Assembled site, produced by .github/workflows/deploy.yml
 dist/
+
+# Scratch output of charger-coverage/run.sh; the published page is index.html
+charger-coverage/output/

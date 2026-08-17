@@ -1,0 +1,17 @@
+[out:json][timeout:90];
+area["ISO3166-1"="NL"]->.searchArea;
+
+// Motorway services/rest areas only
+nwr["highway"~"services|rest_area"]["motorway"="yes"](area.searchArea)->.rest_areas;
+
+// Fuel stations near motorway services/rest areas (within 50m)
+nwr(around.rest_areas:50)["amenity"="fuel"]->.fuel_near_services;
+
+// Also directly on motorway ways (within 30m of motorway ways)
+way["highway"="motorway"](area.searchArea)->.motorways;
+nwr(around.motorways:75)["amenity"="fuel"]->.fuel_near_motorway;
+
+// Combine results
+(.fuel_near_services; .fuel_near_motorway;);
+
+out geom;
