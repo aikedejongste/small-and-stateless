@@ -1,0 +1,5 @@
+# Only the landing page is open to crawlers; the apps themselves are not.
+User-agent: *
+Allow: /$
+Allow: /index.html$
+Disallow: /
