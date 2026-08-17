@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Guidelines</title>
+<style>
+  :root {
+    --teal-dark: #0b3d36;
+    --teal: #128C7E;
+    --green: #25D366;
+    --bubble-right: #d9fdd3;
+    --bubble-wrong: #ffffff;
+    --chat-bg: #efe7dc;
+    --ink: #1f2a28;
+    --ink-soft: #54655f;
+    --check: #34B7F1;
+    --wrong-red: #c4453c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+  body {
+    font-family: "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    background: var(--chat-bg);
+    color: var(--ink);
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(18,140,126,0.04) 0, transparent 45%),
+      radial-gradient(circle at 80% 70%, rgba(18,140,126,0.04) 0, transparent 45%);
+    line-height: 1.5;
+  }
+
+  /* ── Header styled like a chat header ── */
+  header {
+    background: var(--teal-dark);
+    color: #fff;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  }
+  .chatbar {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+  }
+  .avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .chatbar .who { flex: 1; min-width: 0; }
+  .chatbar .who h1 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .chatbar .who p {
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.75);
+  }
+
+  /* ── Intro ── */
+  .intro {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 20px 8px;
+  }
+  .daychip {
+    display: block;
+    width: fit-content;
+    margin: 0 auto 18px;
+    background: rgba(255,255,255,0.9);
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 8px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  }
+  .intro-bubble {
+    background: #fff;
+    border-radius: 10px;
+    border-top-left-radius: 2px;
+    padding: 14px 16px;
+    max-width: 560px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    font-size: 15px;
+  }
+  .intro-bubble strong { color: var(--teal); }
+
+  /* ── Rules ── */
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 20px 60px;
+  }
+  .rule {
+    margin: 34px 0;
+  }
+  .rule-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .rule-num {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--teal);
+    background: rgba(18,140,126,0.1);
+    border-radius: 6px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+  }
+  .rule-title h2 {
+    font-size: 16.5px;
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  .exchange {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .msg {
+    position: relative;
+    max-width: 78%;
+    padding: 8px 12px 20px 12px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    word-wrap: break-word;
+  }
+  .msg .meta {
+    position: absolute;
+    right: 10px;
+    bottom: 4px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .msg.right {
+    align-self: flex-end;
+    background: var(--bubble-right);
+    border-top-right-radius: 2px;
+  }
+  .msg.wrong {
+    align-self: flex-start;
+    background: var(--bubble-wrong);
+    border-top-left-radius: 2px;
+    color: var(--ink-soft);
+  }
+  .msg .tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .msg.right .tag { color: var(--teal); }
+  .msg.wrong .tag { color: var(--wrong-red); }
+  .msg .body { display: block; }
+  .msg.wrong .body { text-decoration-color: rgba(196,69,60,0.35); }
+  .ticks { color: var(--check); font-size: 12px; letter-spacing: -2px; }
+  .cross { color: var(--wrong-red); font-size: 12px; font-weight: 700; }
+  .msg .quote {
+    border-left: 3px solid var(--teal);
+    background: rgba(18,140,126,0.07);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  .msg .attach {
+    background: rgba(0,0,0,0.05);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 13px;
+    margin-bottom: 5px;
+    color: var(--ink-soft);
+  }
+  .msg .emoji-react {
+    position: absolute;
+    left: 10px;
+    bottom: -12px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 1px 7px;
+    font-size: 13px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 24px 20px 48px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  footer .encr {
+    display: inline-block;
+    background: #fdf3d0;
+    color: #7a6a2f;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .msg { max-width: 92%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="chatbar">
+    <div class="avatar" aria-hidden="true">💬</div>
+    <div class="who">
+      <h1>WhatsApp Guidelines</h1>
+      <p>18 rules · online</p>
+    </div>
+  </div>
+</header>
+
+<div class="intro">
+  <span class="daychip">Today</span>
+  <div class="intro-bubble">
+    House rules for better chats. Every rule comes with a <strong>right</strong> and a <strong>wrong</strong> example, shown the way they'd look in the chat itself. Green bubble: do this. White bubble: avoid this.
+  </div>
+</div>
+
+<main>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">1</span><h2>Write questions so they can be answered with yes</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Can we meet at 10?</span><span class="meta">14:02 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">When would suit you?</span><span class="meta">14:02 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">2</span><h2>Write questions so that yes is your preferred answer</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Shall I book the restaurant for 19:00?</span><span class="meta">14:05 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Shall I not book yet?</span><span class="meta">14:05 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">3</span><h2>If you want something, be specific</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Can you send me the invoice from March?</span><span class="meta">14:08 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Can you send me that thing?</span><span class="meta">14:08 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">4</span><h2>If you reply to a message, quote it</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><div class="quote">Friday works</div><span class="body">Great, confirmed</span><span class="meta">14:11 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Yes that's fine</span><span class="body" style="font-size:12px; margin-top:3px;">(three topics later, nobody knows what)</span><span class="meta">14:11 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">5</span><h2>Just send your question, no separate 'hi'</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Hi! Can you bring the drill tomorrow?</span><span class="meta">14:14 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Hi</span><span class="body" style="font-size:12px; margin-top:3px;">...waits for reply... "Can you bring the drill?"</span><span class="meta">14:14 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">6</span><h2>Be explicit</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Can we turn on the AC?</span><span class="meta">14:17 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">It's warm here</span><span class="meta">14:17 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">7</span><h2>One topic per message</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Two messages: one about the meeting, one about the invoice</span><span class="meta">14:20 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">One message mixing the meeting, the invoice, and weekend plans</span><span class="meta">14:20 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">8</span><h2>Put the deadline in the question itself</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Can you confirm before Friday 17:00?</span><span class="meta">14:23 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Can you confirm soon?</span><span class="meta">14:23 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">9</span><h2>Name the person, not "someone"</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Marco, can you check the router?</span><span class="meta">14:26 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Someone should check the router</span><span class="meta">14:26 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">10</span><h2>Voice messages only for things that don't need to be searchable</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><div class="attach">🎙️ Voice note 0:48</div><span class="body">A funny story from last night</span><span class="meta">14:29 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><div class="attach">🎙️ Voice note 2:31</div><span class="body">The door code and arrival instructions</span><span class="meta">14:29 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">11</span><h2>Summarize decisions in one message</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Decision: dinner Saturday 19:30 at Da Luigi, 8 people</span><span class="meta">14:32 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">The decision stays buried in a 40-message thread</span><span class="meta">14:32 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">12</span><h2>React with an emoji instead of replying "ok"</h2></div>
+    <div class="exchange">
+      <div class="msg right" style="margin-bottom:14px;"><span class="tag">Right</span><span class="body">Meeting moved to 11:00</span><span class="emoji-react">👍 3</span><span class="meta">14:35 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">ok</span><span class="body" style="font-size:12px; margin-top:3px;">(notification for everyone in the group)</span><span class="meta">14:35 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">13</span><h2>More than 3 back-and-forths? Suggest a call</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">This is getting complex, can I call you for 5 minutes?</span><span class="meta">14:38 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Message 14 of a growing misunderstanding</span><span class="meta">14:38 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">14</span><h2>Urgent things get a call</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><div class="attach">📞 Voice call · 1:12</div><span class="body">Calling when the water heater is leaking</span><span class="meta">14:41 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">The basement is flooding</span><span class="body" style="font-size:12px; margin-top:3px;">(sent into a quiet group chat)</span><span class="meta">14:41 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">15</span><h2>Write async, don't wait for presence</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">Can you check the config when you have time? No rush before tomorrow</span><span class="meta">14:44 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Are you there?</span><span class="body" style="font-size:12px; margin-top:3px;">...waiting...</span><span class="meta">14:44 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">16</span><h2>Use a poll when the group needs to make a choice</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><div class="attach">📊 Poll: Where do we eat?</div><span class="body">3 options, vote before 15:00</span><span class="meta">14:47 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Where does everyone want to eat?</span><span class="body" style="font-size:12px; margin-top:3px;">(12 suggestions, no decision)</span><span class="meta">14:47 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">17</span><h2>Default action with a deadline for group questions</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">I'll book the 19:00 slot unless someone objects before noon</span><span class="meta">14:50 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">What time works for everyone?</span><span class="body" style="font-size:12px; margin-top:3px;">(silence forever)</span><span class="meta">14:50 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <div class="rule-title"><span class="rule-num">18</span><h2>Use exact times, not "in 10 minutes"</h2></div>
+    <div class="exchange">
+      <div class="msg right"><span class="tag">Right</span><span class="body">I'll be there at 14:30</span><span class="meta">14:53 <span class="ticks">✓✓</span></span></div>
+      <div class="msg wrong"><span class="tag">Wrong</span><span class="body">I'll be there in 10 minutes</span><span class="body" style="font-size:12px; margin-top:3px;">(read 2 hours later — 10 minutes from when?)</span><span class="meta">14:53 <span class="cross">✗</span></span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span class="encr">🔒 These guidelines are end-to-end agreed. Nobody outside this chat can make you write "hi" first.</span>
+</footer>
+
+</body>
+</html>
