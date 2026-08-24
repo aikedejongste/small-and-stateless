@@ -47,6 +47,44 @@ Commit straight to `main` and push. Don't open a PR, and don't work on a branch
 unless asked to — this is a one-person repo and review adds nothing. Since every
 push to `main` deploys, check the change locally first (see below).
 
+**If your session was assigned a `claude/…` branch**, the work still belongs on
+`main`. Develop and commit wherever the harness put you, then fast-forward `main`
+onto it and push `main`:
+
+```
+git checkout main
+git merge --ff-only <your-branch>
+git push origin main
+```
+
+No PR, no merge commit. Say you've done it and leave the stale branch for
+deletion — don't ask which branch to land on, the answer is always `main`.
+
+## Each app owns its own look
+
+There is no shared stylesheet, no design system, and nothing to import. Every
+app is styled from scratch inside its own `index.html`, and they deliberately
+look nothing alike — `comm/` is WhatsApp green, `fallacies/` is dark Playfair,
+`hebrew/` is plain Segoe UI, and `sleep/` never declares a font at all. Some
+define CSS custom properties, most don't.
+
+So don't read another app looking for house style: there isn't one, and copying
+one app's palette into the next is the wrong instinct. Pick a look that suits
+the subject and commit to it. The landing page (`index.html`) is the one file
+with a fixed style — match it when editing a card, not when building an app.
+
+New apps should end with a footer link back to the landing page:
+
+```html
+<footer>
+  Part of <a href="../">Small &amp; Stateless</a> · …
+</footer>
+```
+
+Relative (`../`), for the same reason landing page links are. Apps written
+before this convention don't have one yet, so an app without a back link isn't
+a bug to fix in passing.
+
 ## Apps that live in their own repo
 
 A few listed apps aren't in this repo at all (`cards.aike.be`,
