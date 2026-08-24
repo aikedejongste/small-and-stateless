@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy to Eat</title>
+<meta name="description" content="A 0–10 scale for how easy something is to eat. Five things go wrong when you eat — tools, effort, mess, debris, aftermath — and each one costs you points.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23fbf7f0'/%3E%3Cpath d='M8 20h16' stroke='%23d4622a' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='14' r='5' fill='%23d4622a'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:  #fbf7f0;
+    --card:   #ffffff;
+    --ink:    #1e1a17;
+    --muted:  #7d7266;
+    --line:   #e7ded1;
+    --line-soft: #f0e9de;
+    --accent: #d4622a;
+    --accent-wash: #fbeee5;
+    --shadow: 0 1px 2px rgba(30,26,23,0.05), 0 8px 24px -16px rgba(30,26,23,0.25);
+
+    /* The band ramp doubles as a chip fill and as body text, so every colour
+       here clears 4.5:1 against white and against the paper. */
+    --b10: #237a49;
+    --b8:  #557f2c;
+    --b6:  #8f6f18;
+    --b4:  #b0521c;
+    --b2:  #b03526;
+    --b0:  #8f2320;
+    --on-band: #ffffff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14120f;
+      --card:  #1c1916;
+      --ink:   #ece5da;
+      --muted: #98897a;
+      --line:  #302a24;
+      --line-soft: #241f1a;
+      --accent: #e8814c;
+      --accent-wash: #2a1e17;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -16px rgba(0,0,0,0.8);
+
+      /* Inverted: bright fills carry dark text, so the ramp stays legible
+         both as a chip and as a number on the page. */
+      --b10: #4fb37a;
+      --b8:  #8cbe55;
+      --b6:  #d4b13f;
+      --b4:  #e8814c;
+      --b2:  #d9604a;
+      --b0:  #cf5c46;
+      --on-band: #14120f;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    line-height: 1.65;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+
+  /* ── Header ─────────────────────────────────────────────── */
+
+  header { padding: 64px 0 8px; }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(38px, 9vw, 64px);
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+
+  .lede {
+    margin-top: 20px;
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 44ch;
+    color: var(--muted);
+  }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  /* ── Section furniture ──────────────────────────────────── */
+
+  section { padding: 52px 0; border-top: 1px solid var(--line); margin-top: 52px; }
+
+  h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .sub {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 15.5px;
+    max-width: 56ch;
+  }
+
+  section > p + p { margin-top: 14px; }
+
+  .note { color: var(--muted); font-size: 15.5px; max-width: 60ch; }
+
+  /* ── The scale strip ────────────────────────────────────── */
+
+  .scale { margin-top: 30px; }
+
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 3px;
+  }
+
+  .cell {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-band);
+    padding: 14px 0 12px;
+    border-radius: 4px;
+    transition: transform 0.15s ease, filter 0.15s ease;
+  }
+  .cell:hover, .cell:focus-visible { transform: translateY(-3px); filter: brightness(1.1); outline: none; }
+  .cell[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+
+  .strip-legend {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  /* ── Bands ──────────────────────────────────────────────── */
+
+  .bands { margin-top: 34px; display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+
+  .band {
+    display: grid;
+    grid-template-columns: 74px 1fr;
+    gap: 18px;
+    background: var(--card);
+    padding: 16px 18px;
+    align-items: start;
+  }
+
+  .band-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--on-band);
+    text-align: center;
+    padding: 4px 0;
+    border-radius: 5px;
+  }
+
+  .band h3 { font-size: 15.5px; font-weight: 600; letter-spacing: -0.005em; }
+  .band p { font-size: 14.5px; color: var(--muted); margin-top: 3px; }
+
+  /* ── Axis cards ─────────────────────────────────────────── */
+
+  .axes { margin-top: 32px; display: flex; flex-direction: column; gap: 16px; }
+
+  .axis {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 24px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .axis-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+
+  .axis-when {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-wash);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .axis h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .axis > p { color: var(--muted); font-size: 15px; margin-top: 6px; }
+
+  .levels { margin-top: 16px; display: flex; flex-direction: column; gap: 1px; background: var(--line-soft); border-radius: 8px; overflow: hidden; }
+
+  .level {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+    background: var(--card);
+    padding: 11px 2px 11px 0;
+    font-size: 14.5px;
+  }
+
+  .cost {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+  .cost.c1 { color: var(--b6); }
+  .cost.c2 { color: var(--b2); }
+
+  .level span:last-child { color: var(--muted); }
+  .level b { font-weight: 500; color: var(--ink); }
+
+  /* ── Calculator ─────────────────────────────────────────── */
+
+  .calc {
+    margin-top: 30px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .calc-rows { padding: 6px 22px 18px; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 460px);
+    gap: 10px 18px;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .row:last-child { border-bottom: 0; }
+
+  .row-label { font-size: 15.5px; font-weight: 500; }
+  .row-hint { font-size: 13px; color: var(--muted); font-weight: 300; margin-top: 1px; }
+
+  /* A fixed three-column grid rather than a flex row, so the option buttons
+     line up down the whole calculator instead of ragging out to the left. */
+  .opts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    width: min(100%, 460px);
+  }
+
+  .opt {
+    appearance: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.35;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 9px 8px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .opt:hover { border-color: var(--accent); color: var(--ink); }
+  .opt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .opt:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .calc-out {
+    background: var(--accent-wash);
+    border-top: 1px solid var(--line);
+    padding: 22px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 22px;
+    align-items: center;
+  }
+
+  .big-score {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 54px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    min-width: 78px;
+    text-align: center;
+  }
+
+  .calc-out h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .calc-out p { font-size: 14.5px; color: var(--muted); margin-top: 3px; }
+  .calc-out .company { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+  .calc-out .company b { font-weight: 500; color: var(--ink); }
+
+  .reset {
+    appearance: none;
+    background: none;
+    border: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 12px;
+  }
+  .reset:hover { color: var(--accent); }
+
+  /* ── Examples table ─────────────────────────────────────── */
+
+  .table-tools {
+    margin-top: 26px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  #search {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 12px;
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+  #search:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  .clear {
+    appearance: none;
+    background: none;
+    border: 0;
+    font: inherit;
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .table-scroll { margin-top: 14px; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 620px; }
+
+  thead th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    padding: 13px 6px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+    background: var(--card);
+  }
+  thead th:first-child { text-align: left; padding-left: 18px; }
+  thead th.sc { text-align: right; padding-right: 18px; }
+  thead th[data-sort] { cursor: pointer; user-select: none; }
+  thead th[data-sort]:hover { color: var(--accent); }
+  thead th .arrow { opacity: 0; margin-left: 3px; }
+  thead th[data-active] .arrow { opacity: 1; color: var(--accent); }
+
+  tbody td { border-bottom: 1px solid var(--line-soft); padding: 13px 6px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--muted); }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  td.food {
+    text-align: left;
+    padding-left: 18px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    min-width: 190px;
+  }
+  td.food .why { display: block; font-size: 13.5px; font-weight: 300; color: var(--muted); line-height: 1.5; margin-top: 2px; max-width: 44ch; }
+
+  td.v2 { color: var(--b2); font-weight: 500; }
+  td.v1 { color: var(--b6); }
+  td.v0 { opacity: 0.35; }
+
+  td.sc { text-align: right; padding-right: 18px; }
+  .chip {
+    display: inline-block;
+    min-width: 30px;
+    padding: 3px 0;
+    border-radius: 5px;
+    color: var(--on-band);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .empty { padding: 34px 18px; text-align: center; color: var(--muted); font-size: 14.5px; }
+
+  /* ── Rules list ─────────────────────────────────────────── */
+
+  ol.rules { margin-top: 26px; list-style: none; counter-reset: r; display: flex; flex-direction: column; gap: 20px; }
+  ol.rules li { counter-increment: r; display: grid; grid-template-columns: 30px 1fr; gap: 14px; }
+  ol.rules li::before {
+    content: counter(r);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ol.rules h3 { font-size: 15.5px; font-weight: 600; letter-spacing: -0.005em; }
+  ol.rules p { font-size: 14.5px; color: var(--muted); margin-top: 3px; max-width: 58ch; }
+
+  /* ── Footer ─────────────────────────────────────────────── */
+
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 52px;
+    padding: 26px 0 70px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+  footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+  footer a:hover { color: var(--accent); }
+
+  @media (max-width: 620px) {
+    header { padding-top: 44px; }
+    section { padding: 40px 0; margin-top: 40px; }
+    .band { grid-template-columns: 62px 1fr; gap: 14px; padding: 14px; }
+    .row { grid-template-columns: 1fr; }
+    .opts { flex-wrap: wrap; }
+    .calc-out { grid-template-columns: 1fr; gap: 12px; text-align: left; }
+    .big-score { text-align: left; }
+    .axis { padding: 18px 18px 16px; }
+    .cell { font-size: 12px; padding: 12px 0 10px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+    .cell:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">a scoring system</p>
+    <h1>Easy to <em>Eat</em></h1>
+    <p class="lede">A number from <strong>0 to 10</strong> for how much trouble a food gives you between picking it up and forgetting you ate it. Ten is an M&amp;M. Zero is a lobster. Everything else is arithmetic.</p>
+  </header>
+
+  <section id="scale">
+    <h2>The scale</h2>
+    <p class="sub">Every food starts at 10 — perfectly, frictionlessly edible — and loses points for each thing it makes you do. Nothing ever earns points back, so the number only goes one way.</p>
+
+    <div class="scale">
+      <div class="strip" id="strip" role="group" aria-label="Filter examples by score"></div>
+      <div class="strip-legend">
+        <span>0 · a whole production</span>
+        <span>10 · effortless</span>
+      </div>
+    </div>
+
+    <div class="bands">
+      <div class="band">
+        <span class="band-num" style="background:var(--b10)">10</span>
+        <div>
+          <h3>Frictionless</h3>
+          <p>Pocket food. You could eat it during a job interview and nobody would find out.</p>
+        </div>
+      </div>
+      <div class="band">
+        <span class="band-num" style="background:var(--b8)">9–8</span>
+        <div>
+          <h3>One small catch</h3>
+          <p>A pit to park somewhere, a peel to drop, one wipe of the fingers. Still one-handed.</p>
+        </div>
+      </div>
+      <div class="band">
+        <span class="band-num" style="background:var(--b6)">7–6</span>
+        <div>
+          <h3>Needs a napkin</h3>
+          <p>Fine at a desk if you lean forward. You'll be brushing something off your shirt afterwards.</p>
+        </div>
+      </div>
+      <div class="band">
+        <span class="band-num" style="background:var(--b4)">5–4</span>
+        <div>
+          <h3>Sit down for it</h3>
+          <p>It wants a plate, a surface, and most of your attention. You are eating, not doing something else while eating.</p>
+        </div>
+      </div>
+      <div class="band">
+        <span class="band-num" style="background:var(--b2)">3–2</span>
+        <div>
+          <h3>An event, not a snack</h3>
+          <p>Tools, technique, and a growing pile of remains. Someone has to clear the table afterwards.</p>
+        </div>
+      </div>
+      <div class="band">
+        <span class="band-num" style="background:var(--b0)">1–0</span>
+        <div>
+          <h3>Bring a bib</h3>
+          <p>Special equipment, a learned method, a table you don't mind ruining, and a wash before you speak to anyone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>How we score</h2>
+    <p class="sub">Five things can go wrong when you eat something, and they go wrong in order — before the first bite, during it, and after the last one. Each one costs <b>0</b>, <b>1</b> or <b>2</b> points. Add the penalties, subtract from 10, and that's the score.</p>
+
+    <div class="axes">
+
+      <div class="axis">
+        <div class="axis-head">
+          <span class="axis-when">before</span>
+          <h3>1 · Tools</h3>
+        </div>
+        <p>What has to be in your hand before any food reaches your mouth.</p>
+        <div class="levels">
+          <div class="level"><span class="cost">−0</span><span><b>Your hands, and only your hands.</b> Nothing to fetch, nothing to wash up.</span></div>
+          <div class="level"><span class="cost c1">−1</span><span><b>One ordinary utensil.</b> A fork, a spoon, chopsticks — or a plate you can't put down.</span></div>
+          <div class="level"><span class="cost c2">−2</span><span><b>A kit.</b> Two implements working together, or something you'd have to go out and buy: a crab cracker, a lobster pick, corn holders, a bib.</span></div>
+        </div>
+      </div>
+
+      <div class="axis">
+        <div class="axis-head">
+          <span class="axis-when">during</span>
+          <h3>2 · Effort</h3>
+        </div>
+        <p>The work between "it's in front of me" and "it's swallowed" — peeling, cutting, prying, twirling, chewing.</p>
+        <div class="levels">
+          <div class="level"><span class="cost">−0</span><span><b>Pick it up, chew twice, done.</b> No preparation between you and the bite.</span></div>
+          <div class="level"><span class="cost c1">−1</span><span><b>A small ritual per bite</b> — a peel, a fold, a cut, a twirl — or genuine jaw work.</span></div>
+          <div class="level"><span class="cost c2">−2</span><span><b>Sustained labour at a bad ratio.</b> A minute of prying for two grams of food, or a technique somebody had to teach you.</span></div>
+        </div>
+      </div>
+
+      <div class="axis">
+        <div class="axis-head">
+          <span class="axis-when">during</span>
+          <h3>3 · Mess</h3>
+        </div>
+        <p>What lands on you, and on everything within a metre of you, while you're eating.</p>
+        <div class="levels">
+          <div class="level"><span class="cost">−0</span><span><b>Clean throughout.</b> You could do this in a white shirt while holding somebody's passport.</span></div>
+          <div class="level"><span class="cost c1">−1</span><span><b>Crumbs, or fingertips you'd rather wipe.</b> Survivable with a napkin.</span></div>
+          <div class="level"><span class="cost c2">−2</span><span><b>You will have to wash.</b> Grease, drips, squirt, or a stain that outlives the meal.</span></div>
+        </div>
+      </div>
+
+      <div class="axis">
+        <div class="axis-head">
+          <span class="axis-when">during</span>
+          <h3>4 · Debris</h3>
+        </div>
+        <p>The part that isn't food, and is now your responsibility.</p>
+        <div class="levels">
+          <div class="level"><span class="cost">−0</span><span><b>All of it goes in.</b> Nothing is left over and nothing comes back out.</span></div>
+          <div class="level"><span class="cost c1">−1</span><span><b>One tidy remainder</b> — a pit, a peel, a wrapper, a stick — that you can set down and forget about.</span></div>
+          <div class="level"><span class="cost c2">−2</span><span><b>A pile.</b> Shells, bones, husks, pips — or things you keep having to take back out of your mouth.</span></div>
+        </div>
+      </div>
+
+      <div class="axis">
+        <div class="axis-head">
+          <span class="axis-when">after</span>
+          <h3>5 · Aftermath</h3>
+        </div>
+        <p>What is still true about you ten minutes later.</p>
+        <div class="levels">
+          <div class="level"><span class="cost">−0</span><span><b>No evidence.</b> Nobody could tell.</span></div>
+          <div class="level"><span class="cost c1">−1</span><span><b>Noticeable to you.</b> Something wedged in a tooth, a faint smell on your fingers.</span></div>
+          <div class="level"><span class="cost c2">−2</span><span><b>Noticeable to other people.</b> Breath, stained lips or fingers, a smell in your clothes. You need a mirror before your next conversation.</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="note" style="margin-top:26px">Five axes, two points each, so the worst possible food loses ten and lands on zero. The scale can't go negative — which is the only reason lobster and durian are allowed to share a floor.</p>
+  </section>
+
+  <section id="score-it">
+    <h2>Score it yourself</h2>
+    <p class="sub">Think of something you ate recently and answer five questions about it.</p>
+
+    <div class="calc">
+      <div class="calc-rows" id="calc-rows"></div>
+      <div class="calc-out">
+        <div class="big-score" id="big-score">10</div>
+        <div>
+          <h3 id="out-band">Frictionless</h3>
+          <p id="out-desc">Pocket food. You could eat it during a job interview and nobody would find out.</p>
+          <p class="company" id="out-company"></p>
+        </div>
+      </div>
+    </div>
+    <button class="reset" id="reset" type="button">Reset to a perfect 10</button>
+  </section>
+
+  <section id="examples">
+    <h2>Worked examples</h2>
+    <p class="sub">Forty-four foods, scored on all five axes. <b>T</b>ools, <b>E</b>ffort, <b>M</b>ess, <b>D</b>ebris, <b>A</b>ftermath — each a penalty, all of them subtracted from ten.</p>
+
+    <div class="table-tools">
+      <input id="search" type="search" placeholder="Search the foods…" aria-label="Search the foods">
+      <span id="count"></span>
+      <button class="clear" id="clear" type="button" hidden>clear filters</button>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="name">Food<span class="arrow">▾</span></th>
+            <th title="Tools">T</th>
+            <th title="Effort">E</th>
+            <th title="Mess">M</th>
+            <th title="Debris">D</th>
+            <th title="Aftermath">A</th>
+            <th class="sc" data-sort="score" data-active>Score<span class="arrow">▾</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty" hidden>Nothing matches. Even the durian didn't survive that filter.</div>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2>The fine print</h2>
+    <p class="sub">Six rules that settle most of the arguments.</p>
+
+    <ol class="rules">
+      <li>
+        <div>
+          <h3>Score it as served, not as it could be</h3>
+          <p>A pomegranate somebody else has already deseeded into a tub is a different food from a pomegranate. Score what actually lands in front of you, in the state it lands in.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>One normal portion, eaten normally</h3>
+          <p>Not the way a competitive eater would, not the way a four-year-old would. A single serving, by an adult who has eaten this kind of thing before.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Taste is not a factor</h3>
+          <p>Easy is not the same as good. A rice cake outscores almost everything worth eating. The number measures friction, not pleasure, and the two are frequently opposites — which is roughly the whole point.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Penalties don't stack inside an axis</h3>
+          <p>A chicken wing leaves bones <em>and</em> a greasy wrapper <em>and</em> a little pot of sauce. That is still a 2 for Debris, not a 4. Each axis caps at two, which is what keeps the scale honest.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Context is a modifier, not part of the score</h3>
+          <p>A food's score is context-free — it's a property of the food. Then subtract up to 2 more for where you are: standing up, in a car, in the dark, or with something already in your other hand. That's a separate number, and it isn't the food's fault.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>When in doubt, use the laptop test</h3>
+          <p>Could you eat this at a laptop, in a white shirt, halfway through a meeting? A 10 is yes without thinking about it. A 5 is you'd close the laptop. A 0 is you'd leave the building.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <footer>
+    Part of <a href="../">Small &amp; Stateless</a> · nothing here is saved anywhere
+  </footer>
+
+</div>
+
+<script>
+/* Every food is [Tools, Effort, Mess, Debris, Aftermath] penalties, 0–2 each.
+   The score is always 10 minus their sum — never stored, always derived, so a
+   row can't quietly disagree with its own numbers. */
+const AXES = [
+  { key: 'Tools',     hint: 'What has to be in your hand before you start',
+    opts: ['Hands only', 'One utensil', 'A whole kit'] },
+  { key: 'Effort',    hint: 'The work between picking it up and swallowing it',
+    opts: ['Pick up, chew, done', 'A ritual per bite', 'Sustained labour'] },
+  { key: 'Mess',      hint: 'What lands on you while you eat',
+    opts: ['Nothing', 'Crumbs or fingertips', 'You have to wash'] },
+  { key: 'Debris',    hint: "What's left over that isn't food",
+    opts: ['All of it goes in', 'One tidy remainder', 'A pile'] },
+  { key: 'Aftermath', hint: "What's still true about you ten minutes later",
+    opts: ['No evidence', 'Only you notice', 'Everyone notices'] }
+];
+
+const FOODS = [
+  ['M&M’s',                [0,0,0,0,0], 'The reference standard. A shell that stops the melt, nothing to remove, nothing left behind.'],
+  ['Seedless grape',            [0,0,0,0,0], 'Everything about it goes in and none of it comes back out.'],
+  ['Blueberries',               [0,0,0,0,0], 'Small enough that even dropping one costs you nothing.'],
+  ['Baby carrot',               [0,0,0,0,0], 'The only vegetable at a perfect 10, which explains a great deal about vegetables.'],
+  ['Marshmallow',               [0,0,0,0,0], 'Dissolves before it can cause anybody any trouble.'],
+  ['Grape with seeds',          [0,0,0,1,0], 'One seed to relocate. That single act is the entire difference between a 10 and a 9.'],
+  ['Plain sandwich',            [0,0,1,0,0], 'A few crumbs and nothing else. Quietly the most efficient food on this list.'],
+  ['Banana',                    [0,1,0,1,0], 'A peel you have to open and then carry around until you find a bin.'],
+  ['Mandarin',                  [0,1,0,1,0], 'Built to be opened by hand, which is more than can be said for its larger relatives.'],
+  ['Oreo',                      [0,0,1,0,1], 'Trivial to eat, and then your teeth are black for the next twenty minutes.'],
+  ['Nigiri sushi',              [1,0,1,0,0], 'One clean bite, but the soy dish means the whole thing is anchored to a table.'],
+  ['Ice cream in a cup',        [1,0,0,1,0], 'The spoon and the empty cup are the only costs. No race against melting.'],
+  ['Cherry tomatoes',           [0,0,2,0,0], 'One bite in the wrong place and the seeds are on somebody else’s shirt.'],
+  ['Apple',                     [0,1,1,1,0], 'Twenty bites of jaw work, a wet chin, and a core nobody wants to hold.'],
+  ['Croissant',                 [0,0,2,0,1], 'The flakes are not a side effect of eating a croissant. The flakes are the croissant.'],
+  ['Pizza slice',               [0,0,2,0,1], 'Foldable, so no cutlery, but the grease reaches your wrist and stays on your fingers.'],
+  ['Pistachios',                [0,1,0,2,0], 'Clean and dry the whole way through, and yet you end up guarding a small hill of shells.'],
+  ['Bowl of soup',              [1,1,1,0,0], 'A spoon, a temperature you have to pace yourself against, and the odd drip.'],
+  ['Cheese cube on a stick',    [1,0,0,1,1], 'Engineered for standing up at parties. Only the stick and the breath count against it.'],
+  ['Bagel with cream cheese',   [0,1,1,0,1], 'Serious jaw work and a filling that leaves by the sides as fast as you can push it back.'],
+  ['Popcorn',                   [0,0,1,1,2], 'Effortless for an hour, then the hulls set up permanent residence under your gums.'],
+  ['Ice cream cone',            [0,1,2,0,1], 'The only food on this list with a clock running. Lose the race and it is down your arm.'],
+  ['Boiled egg, unpeeled',      [0,1,0,1,2], 'Shell fragments, and a smell that arrives in the room slightly before you do.'],
+  ['Nachos with dip',           [0,1,2,0,1], 'Every chip is a structural gamble, and the failures land in the dip or on you.'],
+  ['Burger',                    [0,1,2,1,1], 'Two hands, a lean forward, and a wrapper doing most of the load-bearing.'],
+  ['Spaghetti bolognese',       [1,1,2,0,1], 'A twirl you had to learn, and sauce that arrives on a white shirt by its own methods.'],
+  ['Green salad',               [1,1,2,0,1], 'Chasing leaves too big for the fork, dressing everywhere, spinach in your teeth. The middle of the scale exists because of salad.'],
+  ['Watermelon slice',          [0,0,2,2,1], 'No skill required at all, and yet juice to the elbow, a rind, and a mouthful of pips.'],
+  ['Cotton candy',              [0,0,2,1,2], 'Nothing to chew and nothing left over, but your hands and face stay tacky for an hour.'],
+  ['Steak',                     [2,1,1,0,1], 'Knife and fork working together for the whole meal, and fibres between your teeth afterwards.'],
+  ['Sunflower seeds in shell',  [0,2,1,2,1], 'The worst work-to-food ratio in the shop, paid one seed at a time.'],
+  ['Ramen',                     [2,1,2,0,1], 'Chopsticks and a spoon in the same bowl, and broth that splashes on the way up.'],
+  ['Döner kebab',          [0,1,2,1,2], 'Structurally doomed from the third bite, and the garlic sauce follows you into the evening.'],
+  ['Orange, unpeeled',          [0,2,1,2,1], 'Half the work of an orange happens before any of it is food.'],
+  ['Corn on the cob',           [1,1,2,1,2], 'Little handles exist for it, butter reaches your ears, and the kernels are famously photogenic in a smile.'],
+  ['Oysters',                   [2,1,1,2,1], 'A shucking knife, a technique, and a graveyard of shells for four bites of food.'],
+  ['Artichoke',                 [1,2,1,2,1], 'You scrape forty leaves with your teeth to reach a heart the size of an egg.'],
+  ['Spare ribs',                [0,2,2,2,2], 'Eaten entirely with your face. Bones, sauce to the wrist, and a wash before you touch anything.'],
+  ['Chicken wings',             [0,2,2,2,2], 'Two bones, a small amount of meat, and hands that are out of service until further notice.'],
+  ['Whole fish, bone in',       [2,2,1,2,1], 'Fork and knife performing surgery, and a skeleton left on the plate looking at you.'],
+  ['Pomegranate, whole',        [1,2,2,2,1], 'A knife, a bowl of water, twenty minutes, bitter pith to discard, and juice that stains for good.'],
+  ['Crab',                      [2,2,2,2,1], 'Special cutlery, a learned technique, a heap of shell, and it still ends up on your hands and your face.'],
+  ['Lobster',                   [2,2,2,2,2], 'Crackers, picks, a bib, a shell graveyard, butter to the elbow, and a smell that stays on your hands.'],
+  ['Durian',                    [2,2,2,2,2], 'A husk you need gloves and a knife to open, slippery flesh, stones the size of plums, and hotels that ban you afterwards.']
+];
+
+const sum   = s => s.reduce((a, b) => a + b, 0);
+const score = s => 10 - sum(s);
+
+function bandColor(n) {
+  if (n === 10) return 'var(--b10)';
+  if (n >= 8)   return 'var(--b8)';
+  if (n >= 6)   return 'var(--b6)';
+  if (n >= 4)   return 'var(--b4)';
+  if (n >= 2)   return 'var(--b2)';
+  return 'var(--b0)';
+}
+
+const BANDS = [
+  { min: 10, name: 'Frictionless',           desc: 'Pocket food. You could eat it during a job interview and nobody would find out.' },
+  { min: 8,  name: 'One small catch',        desc: 'A pit to park somewhere, a peel to drop, one wipe of the fingers. Still one-handed.' },
+  { min: 6,  name: 'Needs a napkin',         desc: "Fine at a desk if you lean forward. You'll be brushing something off your shirt afterwards." },
+  { min: 4,  name: 'Sit down for it',        desc: 'It wants a plate, a surface, and most of your attention.' },
+  { min: 2,  name: 'An event, not a snack',  desc: 'Tools, technique, and a growing pile of remains.' },
+  { min: 0,  name: 'Bring a bib',            desc: "Special equipment, a learned method, and a wash before you speak to anyone." }
+];
+
+const band = n => BANDS.find(b => n >= b.min);
+
+/* ── The 0–10 strip, which doubles as a filter ────────────── */
+
+let scoreFilter = null;
+const strip = document.getElementById('strip');
+
+for (let n = 0; n <= 10; n++) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'cell';
+  b.textContent = n;
+  b.style.background = bandColor(n);
+  b.setAttribute('aria-pressed', 'false');
+  b.setAttribute('aria-label', `Show only foods scoring ${n}`);
+  b.addEventListener('click', () => {
+    scoreFilter = (scoreFilter === n) ? null : n;
+    render();
+    document.getElementById('examples').scrollIntoView({ block: 'start' });
+  });
+  strip.appendChild(b);
+}
+
+/* ── Calculator ───────────────────────────────────────────── */
+
+const picks = [0, 0, 0, 0, 0];
+const rows = document.getElementById('calc-rows');
+
+AXES.forEach((axis, i) => {
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  const label = document.createElement('div');
+  label.innerHTML = `<div class="row-label">${axis.key}</div><div class="row-hint">${axis.hint}</div>`;
+
+  const opts = document.createElement('div');
+  opts.className = 'opts';
+  opts.setAttribute('role', 'group');
+  opts.setAttribute('aria-label', axis.key);
+
+  axis.opts.forEach((text, v) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = text;
+    b.setAttribute('aria-pressed', String(v === 0));
+    b.addEventListener('click', () => {
+      picks[i] = v;
+      [...opts.children].forEach((c, ci) => c.setAttribute('aria-pressed', String(ci === v)));
+      updateCalc();
+    });
+    opts.appendChild(b);
+  });
+
+  row.append(label, opts);
+  rows.appendChild(row);
+});
+
+function updateCalc() {
+  const n = score(picks);
+  const bd = band(n);
+  const el = document.getElementById('big-score');
+  el.textContent = n;
+  el.style.color = bandColor(n);
+  document.getElementById('out-band').textContent = bd.name;
+  document.getElementById('out-desc').textContent = bd.desc;
+
+  const peers = FOODS.filter(f => score(f[1]) === n).map(f => f[0]);
+  const co = document.getElementById('out-company');
+  co.innerHTML = peers.length
+    ? `Also a ${n}: <b>${peers.slice(0, 3).join('</b>, <b>')}</b>${peers.length > 3 ? ` and ${peers.length - 3} more` : ''}.`
+    : '';
+}
+
+document.getElementById('reset').addEventListener('click', () => {
+  picks.fill(0);
+  [...rows.querySelectorAll('.opts')].forEach(g =>
+    [...g.children].forEach((c, ci) => c.setAttribute('aria-pressed', String(ci === 0))));
+  updateCalc();
+});
+
+/* ── Examples table ───────────────────────────────────────── */
+
+let sortKey = 'score', sortDir = 1;   // 1 = worst first, matching the scale's reading order
+const tbody  = document.getElementById('tbody');
+const search = document.getElementById('search');
+
+document.querySelectorAll('th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+    document.querySelectorAll('th[data-sort]').forEach(o => o.removeAttribute('data-active'));
+    th.setAttribute('data-active', '');
+    th.querySelector('.arrow').textContent = sortDir === 1 ? '▾' : '▴';
+    render();
+  });
+});
+
+search.addEventListener('input', render);
+document.getElementById('clear').addEventListener('click', () => {
+  search.value = '';
+  scoreFilter = null;
+  render();
+});
+
+function render() {
+  const q = search.value.trim().toLowerCase();
+
+  let list = FOODS.filter(f =>
+    (scoreFilter === null || score(f[1]) === scoreFilter) &&
+    (!q || f[0].toLowerCase().includes(q) || f[2].toLowerCase().includes(q))
+  );
+
+  list = list.slice().sort((a, b) => {
+    const cmp = sortKey === 'name'
+      ? a[0].localeCompare(b[0])
+      : score(a[1]) - score(b[1]) || a[0].localeCompare(b[0]);
+    return cmp * sortDir;
+  });
+
+  tbody.innerHTML = list.map(([name, s, why]) => {
+    const n = score(s);
+    const cells = s.map(v => `<td class="v${v}">${v === 0 ? '·' : '−' + v}</td>`).join('');
+    return `<tr>
+      <td class="food">${name}<span class="why">${why}</span></td>
+      ${cells}
+      <td class="sc"><span class="chip" style="background:${bandColor(n)}">${n}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('empty').hidden = list.length > 0;
+  document.getElementById('count').textContent =
+    list.length === FOODS.length ? `${FOODS.length} foods` : `${list.length} of ${FOODS.length}`;
+  document.getElementById('clear').hidden = !q && scoreFilter === null;
+
+  [...strip.children].forEach((c, n) =>
+    c.setAttribute('aria-pressed', String(scoreFilter === n)));
+}
+
+updateCalc();
+render();
+</script>
+</body>
+</html>
