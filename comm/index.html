@@ -114,6 +114,8 @@
   }
   .rule {
     margin: 34px 0;
+    /* clear the sticky chat header when jumped to via #rule-n */
+    scroll-margin-top: 84px;
   }
   .rule-title {
     display: flex;
@@ -129,6 +131,20 @@
     border-radius: 6px;
     padding: 2px 8px;
     flex-shrink: 0;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  a.rule-num:hover {
+    background: var(--teal);
+    color: #fff;
+  }
+  a.rule-num:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+  .rule:target .rule-num {
+    background: var(--green);
+    color: #fff;
   }
   .rule-title h2 {
     font-size: 16.5px;
@@ -255,152 +271,152 @@
 
 <main>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">1</span><h2>Write questions so they can be answered with yes</h2></div>
+  <section class="rule" id="rule-1">
+    <div class="rule-title"><a class="rule-num" href="#rule-1" aria-label="Permalink to rule 1">1</a><h2>Write questions so they can be answered with yes</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Can we meet at 10?</span><span class="meta">14:02 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">When would suit you?</span><span class="meta">14:02 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">2</span><h2>Write questions so that yes is your preferred answer</h2></div>
+  <section class="rule" id="rule-2">
+    <div class="rule-title"><a class="rule-num" href="#rule-2" aria-label="Permalink to rule 2">2</a><h2>Write questions so that yes is your preferred answer</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Shall I book the restaurant for 19:00?</span><span class="meta">14:05 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Shall I not book yet?</span><span class="meta">14:05 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">3</span><h2>If you want something, be specific</h2></div>
+  <section class="rule" id="rule-3">
+    <div class="rule-title"><a class="rule-num" href="#rule-3" aria-label="Permalink to rule 3">3</a><h2>If you want something, be specific</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Can you send me the invoice from March?</span><span class="meta">14:08 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Can you send me that thing?</span><span class="meta">14:08 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">4</span><h2>If you reply to a message, quote it</h2></div>
+  <section class="rule" id="rule-4">
+    <div class="rule-title"><a class="rule-num" href="#rule-4" aria-label="Permalink to rule 4">4</a><h2>If you reply to a message, quote it</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><div class="quote">Friday works</div><span class="body">Great, confirmed</span><span class="meta">14:11 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Yes that's fine</span><span class="body" style="font-size:12px; margin-top:3px;">(three topics later, nobody knows what)</span><span class="meta">14:11 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">5</span><h2>Just send your question, no separate 'hi'</h2></div>
+  <section class="rule" id="rule-5">
+    <div class="rule-title"><a class="rule-num" href="#rule-5" aria-label="Permalink to rule 5">5</a><h2>Just send your question, no separate 'hi'</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Hi! Can you bring the drill tomorrow?</span><span class="meta">14:14 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Hi</span><span class="body" style="font-size:12px; margin-top:3px;">...waits for reply... "Can you bring the drill?"</span><span class="meta">14:14 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">6</span><h2>Be explicit</h2></div>
+  <section class="rule" id="rule-6">
+    <div class="rule-title"><a class="rule-num" href="#rule-6" aria-label="Permalink to rule 6">6</a><h2>Be explicit</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Can we turn on the AC?</span><span class="meta">14:17 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">It's warm here</span><span class="meta">14:17 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">7</span><h2>One topic per message</h2></div>
+  <section class="rule" id="rule-7">
+    <div class="rule-title"><a class="rule-num" href="#rule-7" aria-label="Permalink to rule 7">7</a><h2>One topic per message</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Two messages: one about the meeting, one about the invoice</span><span class="meta">14:20 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">One message mixing the meeting, the invoice, and weekend plans</span><span class="meta">14:20 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">8</span><h2>Put the deadline in the question itself</h2></div>
+  <section class="rule" id="rule-8">
+    <div class="rule-title"><a class="rule-num" href="#rule-8" aria-label="Permalink to rule 8">8</a><h2>Put the deadline in the question itself</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Can you confirm before Friday 17:00?</span><span class="meta">14:23 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Can you confirm soon?</span><span class="meta">14:23 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">9</span><h2>Name the person, not "someone"</h2></div>
+  <section class="rule" id="rule-9">
+    <div class="rule-title"><a class="rule-num" href="#rule-9" aria-label="Permalink to rule 9">9</a><h2>Name the person, not "someone"</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Marco, can you check the router?</span><span class="meta">14:26 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Someone should check the router</span><span class="meta">14:26 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">10</span><h2>Voice messages only for things that don't need to be searchable</h2></div>
+  <section class="rule" id="rule-10">
+    <div class="rule-title"><a class="rule-num" href="#rule-10" aria-label="Permalink to rule 10">10</a><h2>Voice messages only for things that don't need to be searchable</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><div class="attach">🎙️ Voice note 0:48</div><span class="body">A funny story from last night</span><span class="meta">14:29 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><div class="attach">🎙️ Voice note 2:31</div><span class="body">The door code and arrival instructions</span><span class="meta">14:29 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">11</span><h2>Summarize decisions in one message</h2></div>
+  <section class="rule" id="rule-11">
+    <div class="rule-title"><a class="rule-num" href="#rule-11" aria-label="Permalink to rule 11">11</a><h2>Summarize decisions in one message</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Decision: dinner Saturday 19:30 at Da Luigi, 8 people</span><span class="meta">14:32 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">The decision stays buried in a 40-message thread</span><span class="meta">14:32 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">12</span><h2>React with an emoji instead of replying "ok"</h2></div>
+  <section class="rule" id="rule-12">
+    <div class="rule-title"><a class="rule-num" href="#rule-12" aria-label="Permalink to rule 12">12</a><h2>React with an emoji instead of replying "ok"</h2></div>
     <div class="exchange">
       <div class="msg right" style="margin-bottom:14px;"><span class="tag">Right</span><span class="body">Meeting moved to 11:00</span><span class="emoji-react">👍 3</span><span class="meta">14:35 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">ok</span><span class="body" style="font-size:12px; margin-top:3px;">(notification for everyone in the group)</span><span class="meta">14:35 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">13</span><h2>More than 3 back-and-forths? Suggest a call</h2></div>
+  <section class="rule" id="rule-13">
+    <div class="rule-title"><a class="rule-num" href="#rule-13" aria-label="Permalink to rule 13">13</a><h2>More than 3 back-and-forths? Suggest a call</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">This is getting complex, can I call you for 5 minutes?</span><span class="meta">14:38 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Message 14 of a growing misunderstanding</span><span class="meta">14:38 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">14</span><h2>Urgent things get a call</h2></div>
+  <section class="rule" id="rule-14">
+    <div class="rule-title"><a class="rule-num" href="#rule-14" aria-label="Permalink to rule 14">14</a><h2>Urgent things get a call</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><div class="attach">📞 Voice call · 1:12</div><span class="body">Calling when the water heater is leaking</span><span class="meta">14:41 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">The basement is flooding</span><span class="body" style="font-size:12px; margin-top:3px;">(sent into a quiet group chat)</span><span class="meta">14:41 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">15</span><h2>Write async, don't wait for presence</h2></div>
+  <section class="rule" id="rule-15">
+    <div class="rule-title"><a class="rule-num" href="#rule-15" aria-label="Permalink to rule 15">15</a><h2>Write async, don't wait for presence</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">Can you check the config when you have time? No rush before tomorrow</span><span class="meta">14:44 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Are you there?</span><span class="body" style="font-size:12px; margin-top:3px;">...waiting...</span><span class="meta">14:44 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">16</span><h2>Use a poll when the group needs to make a choice</h2></div>
+  <section class="rule" id="rule-16">
+    <div class="rule-title"><a class="rule-num" href="#rule-16" aria-label="Permalink to rule 16">16</a><h2>Use a poll when the group needs to make a choice</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><div class="attach">📊 Poll: Where do we eat?</div><span class="body">3 options, vote before 15:00</span><span class="meta">14:47 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">Where does everyone want to eat?</span><span class="body" style="font-size:12px; margin-top:3px;">(12 suggestions, no decision)</span><span class="meta">14:47 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">17</span><h2>Default action with a deadline for group questions</h2></div>
+  <section class="rule" id="rule-17">
+    <div class="rule-title"><a class="rule-num" href="#rule-17" aria-label="Permalink to rule 17">17</a><h2>Default action with a deadline for group questions</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">I'll book the 19:00 slot unless someone objects before noon</span><span class="meta">14:50 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">What time works for everyone?</span><span class="body" style="font-size:12px; margin-top:3px;">(silence forever)</span><span class="meta">14:50 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">18</span><h2>Use exact times, not "in 10 minutes"</h2></div>
+  <section class="rule" id="rule-18">
+    <div class="rule-title"><a class="rule-num" href="#rule-18" aria-label="Permalink to rule 18">18</a><h2>Use exact times, not "in 10 minutes"</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><span class="body">I'll be there at 14:30</span><span class="meta">14:53 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><span class="body">I'll be there in 10 minutes</span><span class="body" style="font-size:12px; margin-top:3px;">(read 2 hours later — 10 minutes from when?)</span><span class="meta">14:53 <span class="cross">✗</span></span></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="rule-title"><span class="rule-num">19</span><h2>Never send a bare link, say what it is</h2></div>
+  <section class="rule" id="rule-19">
+    <div class="rule-title"><a class="rule-num" href="#rule-19" aria-label="Permalink to rule 19">19</a><h2>Never send a bare link, say what it is</h2></div>
     <div class="exchange">
       <div class="msg right"><span class="tag">Right</span><div class="attach">🔗 nrc.nl/…/parking-permit-rules</div><span class="body">New parking rules from January — the part about visitor permits is halfway down</span><span class="meta">14:56 <span class="ticks">✓✓</span></span></div>
       <div class="msg wrong"><span class="tag">Wrong</span><div class="attach">🔗 https://www.nrc.nl/nieuws/2026/01/…?utm_source=share</div><span class="body" style="font-size:12px;">(no text — why should I open this, and what am I looking for?)</span><span class="meta">14:56 <span class="cross">✗</span></span></div>
