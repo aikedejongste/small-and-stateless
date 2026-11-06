@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flag Quiz!</title>
+<style>
+  :root {
+    --bg: #fff8e7;
+    --card: #ffffff;
+    --ink: #2b2d42;
+    --accent: #ff6b6b;
+    --blue: #4d96ff;
+    --green: #2ec27e;
+    --red: #e5484d;
+    --yellow: #ffd93d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+  }
+  .app { width: 100%; max-width: 640px; text-align: center; }
+  h1 { font-size: 2.4rem; margin: 8px 0 4px; color: var(--accent); }
+  .sub { margin: 0 0 16px; font-size: 1.1rem; }
+  .bar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 1.2rem; font-weight: bold; margin-bottom: 12px;
+  }
+  .progress { height: 14px; background: #eee; border-radius: 99px; overflow: hidden; margin-bottom: 16px; }
+  .progress > div { height: 100%; background: var(--blue); width: 0; transition: width .3s; }
+  .card {
+    background: var(--card); border-radius: 24px; padding: 20px;
+    box-shadow: 0 6px 0 rgba(0,0,0,.08);
+  }
+  .flag-wrap {
+    aspect-ratio: 3 / 2; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .flag {
+    max-width: 100%; max-height: 100%;
+    border-radius: 8px; box-shadow: 0 0 0 2px #ddd, 0 6px 16px rgba(0,0,0,.15);
+  }
+  .question { font-size: 1.4rem; margin: 0 0 16px; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .choices { grid-template-columns: 1fr; } }
+  .choice {
+    font: inherit; font-size: 1.25rem; font-weight: bold;
+    padding: 18px 12px; border: none; border-radius: 16px; cursor: pointer;
+    background: var(--yellow); color: var(--ink);
+    box-shadow: 0 5px 0 rgba(0,0,0,.15);
+    transition: transform .1s;
+  }
+  .choice:hover:not(:disabled) { transform: translateY(-2px); }
+  .choice:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+  .choice:disabled { cursor: default; opacity: .55; }
+  .choice.correct { background: var(--green); color: #fff; opacity: 1; animation: pop .4s; }
+  .choice.wrong { background: var(--red); color: #fff; opacity: 1; animation: shake .4s; }
+  .feedback { min-height: 2.2rem; font-size: 1.5rem; font-weight: bold; margin: 16px 0 8px; }
+  .big-btn {
+    font: inherit; font-size: 1.4rem; font-weight: bold;
+    padding: 14px 32px; border: none; border-radius: 99px; cursor: pointer;
+    background: var(--blue); color: #fff; box-shadow: 0 5px 0 #2f6fd1;
+  }
+  .big-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #2f6fd1; }
+  .stars { font-size: 3rem; margin: 12px 0; letter-spacing: 6px; }
+  .end h2 { font-size: 2rem; margin: 8px 0; }
+  .end p { font-size: 1.3rem; }
+  [hidden] { display: none !important; }
+  @keyframes pop { 50% { transform: scale(1.1); } }
+  @keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🌍 Flag Quiz!</h1>
+  <p class="sub">Guess the country — and how many people live there!</p>
+
+  <div id="game">
+    <div class="bar">
+      <span id="count">Question 1 / 10</span>
+      <span id="score">⭐ 0</span>
+    </div>
+    <div class="progress"><div id="progress"></div></div>
+    <div class="card">
+      <div class="flag-wrap"><img id="flag" class="flag" alt="A country flag"></div>
+      <p class="question" id="question"></p>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  </div>
+
+  <div id="end" class="card end" hidden>
+    <h2 id="end-title"></h2>
+    <div class="stars" id="stars"></div>
+    <p id="end-text"></p>
+    <button class="big-btn" id="again">Play again 🔄</button>
+  </div>
+</div>
+
+<script>
+// Flags are loaded from flagcdn.com (free, public-domain flag images) by ISO country code.
+const COUNTRIES = {
+  dz:"Algeria", ao:"Angola", bj:"Benin", bw:"Botswana", bf:"Burkina Faso", bi:"Burundi",
+  cv:"Cape Verde", cm:"Cameroon", cf:"Central African Republic", td:"Chad", km:"Comoros",
+  cg:"Congo", cd:"DR Congo", ci:"Ivory Coast", dj:"Djibouti", eg:"Egypt", gq:"Equatorial Guinea",
+  er:"Eritrea", sz:"Eswatini", et:"Ethiopia", ga:"Gabon", gm:"Gambia", gh:"Ghana", gn:"Guinea",
+  gw:"Guinea-Bissau", ke:"Kenya", ls:"Lesotho", lr:"Liberia", ly:"Libya", mg:"Madagascar",
+  mw:"Malawi", ml:"Mali", mr:"Mauritania", mu:"Mauritius", ma:"Morocco", mz:"Mozambique",
+  na:"Namibia", ne:"Niger", ng:"Nigeria", rw:"Rwanda", st:"São Tomé and Príncipe", sn:"Senegal",
+  sc:"Seychelles", sl:"Sierra Leone", so:"Somalia", za:"South Africa", ss:"South Sudan",
+  sd:"Sudan", tz:"Tanzania", tg:"Togo", tn:"Tunisia", ug:"Uganda", zm:"Zambia", zw:"Zimbabwe",
+
+  af:"Afghanistan", am:"Armenia", az:"Azerbaijan", bh:"Bahrain", bd:"Bangladesh", bt:"Bhutan",
+  bn:"Brunei", kh:"Cambodia", cn:"China", cy:"Cyprus", ge:"Georgia", in:"India", id:"Indonesia",
+  ir:"Iran", iq:"Iraq", il:"Israel", jp:"Japan", jo:"Jordan", kz:"Kazakhstan", kw:"Kuwait",
+  kg:"Kyrgyzstan", la:"Laos", lb:"Lebanon", my:"Malaysia", mv:"Maldives", mn:"Mongolia",
+  mm:"Myanmar", np:"Nepal", kp:"North Korea", om:"Oman", pk:"Pakistan", ps:"Palestine",
+  ph:"Philippines", qa:"Qatar", sa:"Saudi Arabia", sg:"Singapore", kr:"South Korea",
+  lk:"Sri Lanka", sy:"Syria", tw:"Taiwan", tj:"Tajikistan", th:"Thailand", tl:"Timor-Leste",
+  tr:"Türkiye", tm:"Turkmenistan", ae:"United Arab Emirates", uz:"Uzbekistan", vn:"Vietnam",
+  ye:"Yemen",
+
+  al:"Albania", ad:"Andorra", at:"Austria", by:"Belarus", be:"Belgium", ba:"Bosnia and Herzegovina",
+  bg:"Bulgaria", hr:"Croatia", cz:"Czechia", dk:"Denmark", ee:"Estonia", fi:"Finland", fr:"France",
+  de:"Germany", gr:"Greece", hu:"Hungary", is:"Iceland", ie:"Ireland", it:"Italy", xk:"Kosovo",
+  lv:"Latvia", li:"Liechtenstein", lt:"Lithuania", lu:"Luxembourg", mt:"Malta", md:"Moldova",
+  mc:"Monaco", me:"Montenegro", nl:"Netherlands", mk:"North Macedonia", no:"Norway", pl:"Poland",
+  pt:"Portugal", ro:"Romania", ru:"Russia", sm:"San Marino", rs:"Serbia", sk:"Slovakia",
+  si:"Slovenia", es:"Spain", se:"Sweden", ch:"Switzerland", ua:"Ukraine", gb:"United Kingdom",
+  va:"Vatican City",
+
+  ag:"Antigua and Barbuda", ar:"Argentina", bs:"Bahamas", bb:"Barbados", bz:"Belize", bo:"Bolivia",
+  br:"Brazil", ca:"Canada", cl:"Chile", co:"Colombia", cr:"Costa Rica", cu:"Cuba", dm:"Dominica",
+  do:"Dominican Republic", ec:"Ecuador", sv:"El Salvador", gd:"Grenada", gt:"Guatemala",
+  gy:"Guyana", ht:"Haiti", hn:"Honduras", jm:"Jamaica", mx:"Mexico", ni:"Nicaragua", pa:"Panama",
+  py:"Paraguay", pe:"Peru", kn:"Saint Kitts and Nevis", lc:"Saint Lucia",
+  vc:"Saint Vincent and the Grenadines", sr:"Suriname", tt:"Trinidad and Tobago",
+  us:"United States", uy:"Uruguay", ve:"Venezuela",
+
+  au:"Australia", fj:"Fiji", ki:"Kiribati", mh:"Marshall Islands", fm:"Micronesia", nr:"Nauru",
+  nz:"New Zealand", pw:"Palau", pg:"Papua New Guinea", ws:"Samoa", sb:"Solomon Islands",
+  to:"Tonga", tv:"Tuvalu", vu:"Vanuatu"
+};
+const CODES = Object.keys(COUNTRIES);
+// Flags that look (almost) the same are never shown as options in the same question
+const LOOKALIKES = [["td","ro","ad","md"], ["id","mc"], ["au","nz"], ["ie","ci"], ["nl","lu"]];
+const similar = (a, b) => LOOKALIKES.some(g => g.includes(a) && g.includes(b));
+
+// Approximate population in millions (UN estimates, ~2024)
+const POP = {
+  dz:46.8, ao:37.9, bj:14.5, bw:2.5, bf:23.5, bi:14, cv:0.52, cm:29.1, cf:5.3, td:20.3, km:0.87,
+  cg:6.3, cd:109, ci:31.9, dj:1.17, eg:116, gq:1.9, er:3.5, sz:1.24, et:132, ga:2.5, gm:2.8,
+  gh:34.4, gn:14.8, gw:2.2, ke:56.4, ls:2.3, lr:5.6, ly:7.4, mg:31.9, mw:21.7, ml:24.5, mr:5.2,
+  mu:1.27, ma:38.1, mz:34.6, na:3, ne:27, ng:228, rw:14.3, st:0.24, sn:18.5, sc:0.13, sl:8.6,
+  so:19, za:64, ss:11.9, sd:50.4, tz:68.6, tg:9.5, tn:12.3, ug:50, zm:21.3, zw:16.6,
+
+  af:42.6, am:3, az:10.3, bh:1.6, bd:174, bt:0.79, bn:0.46, kh:17.6, cn:1410, cy:1.36, ge:3.8,
+  in:1450, id:283, ir:91.6, iq:46, il:9.4, jp:124, jo:11.6, kz:20.6, kw:4.9, kg:7.2, la:7.8,
+  lb:5.8, my:35.6, mv:0.53, mn:3.5, mm:54.5, np:29.7, kp:26.5, om:5.3, pk:251, ps:5.5, ph:116,
+  qa:3, sa:33.9, sg:5.9, kr:51.7, lk:23.1, sy:24.7, tw:23.4, tj:10.6, th:71.7, tl:1.4, tr:87.5,
+  tm:7.5, ae:11, uz:36.4, vn:101, ye:40.6,
+
+  al:2.8, ad:0.08, at:9.1, by:9.1, be:11.8, ba:3.2, bg:6.4, hr:3.9, cz:10.7, dk:6, ee:1.37,
+  fi:5.6, fr:68.5, de:84.5, gr:10.4, hu:9.6, is:0.39, ie:5.3, it:59, xk:1.6, lv:1.87, li:0.04,
+  lt:2.9, lu:0.67, mt:0.56, md:2.4, mc:0.04, me:0.62, nl:18, mk:1.8, no:5.6, pl:36.6, pt:10.6,
+  ro:19, ru:144, sm:0.034, rs:6.6, sk:5.4, si:2.1, es:48.6, se:10.6, ch:9, ua:38, gb:69.1,
+  va:0.0008,
+
+  ag:0.094, ar:45.7, bs:0.4, bb:0.28, bz:0.42, bo:12.4, br:212, ca:40.1, cl:19.8, co:52.9,
+  cr:5.1, cu:10.9, dm:0.067, do:11.4, ec:18.1, sv:6.3, gd:0.117, gt:18.4, gy:0.83, ht:11.8,
+  hn:10.8, jm:2.8, mx:131, ni:7, pa:4.5, py:6.9, pe:34.2, kn:0.047, lc:0.18, vc:0.1, sr:0.63,
+  tt:1.5, us:340, uy:3.4, ve:28.4,
+
+  au:27.2, fj:0.93, ki:0.134, mh:0.038, fm:0.115, nr:0.012, nz:5.2, pw:0.018, pg:10.6, ws:0.22,
+  sb:0.82, to:0.104, tv:0.0096, vu:0.33
+};
+
+// Names that read better with "the" in a sentence ("How many people live in the Netherlands?")
+const WITH_THE = new Set(["nl","us","gb","ae","ph","bs","gm","mv","mh","sb","cf","do","km","sc","cd"]);
+const inName = code => (WITH_THE.has(code) ? "the " : "") + COUNTRIES[code];
+
+// 17.9 → "18 million", 2.8 → "2.8 million", 0.52 → "520 thousand", 0.0008 → "800 people"
+function formatPop(m) {
+  const trim = n => String(+n.toFixed(1));
+  if (m >= 1000) return `${trim(m / 1000)} billion`;
+  if (m >= 10) return `${Math.round(m)} million`;
+  if (m >= 1) return `${trim(m)} million`;
+  const people = m * 1e6;
+  if (people >= 10000) return `${Number(people.toPrecision(2)) / 1000} thousand`;
+  return `${Number(people.toPrecision(2)).toLocaleString("en-US")} people`;
+}
+
+const ROUNDS = 10;
+const CHEERS = ["Great job! 🎉", "Awesome! 🌟", "You got it! 👏", "Super! 🚀", "Yes! 🥳"];
+
+let questions, index, score;
+
+const $ = id => document.getElementById(id);
+const shuffle = arr => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const flagUrl = code => `https://flagcdn.com/w640/${code}.png`;
+
+function start() {
+  // Each question is randomly a flag question or a population question
+  questions = shuffle(CODES).slice(0, ROUNDS)
+    .map(code => ({ code, type: Math.random() < 0.5 ? "flag" : "pop" }));
+  index = 0;
+  score = 0;
+  $("end").hidden = true;
+  $("game").hidden = false;
+  show();
+}
+
+// Three other countries to use as wrong answers
+function pickWrong(answer, ok) {
+  const wrong = [];
+  for (const c of shuffle(CODES)) {
+    if (wrong.length === 3) break;
+    if (c !== answer && [answer, ...wrong].every(o => ok(o, c))) wrong.push(c);
+  }
+  return wrong;
+}
+
+function show() {
+  const { code: answer, type } = questions[index];
+  let options, label, question, oops;
+
+  if (type === "flag") {
+    // Never put two lookalike flags in the same question
+    options = [answer, ...pickWrong(answer, (a, b) => !similar(a, b))];
+    label = c => COUNTRIES[c];
+    question = "Which country is this? 🤔";
+    oops = `Oops! It was ${COUNTRIES[answer]} 🙂`;
+  } else {
+    // Population numbers must be clearly different from each other
+    const farApart = (a, b) => Math.max(POP[a], POP[b]) / Math.min(POP[a], POP[b]) >= 1.6;
+    options = [answer, ...pickWrong(answer, farApart)];
+    label = c => formatPop(POP[c]);
+    question = `How many people live in ${inName(answer)}? 👨‍👩‍👧‍👦`;
+    oops = `Oops! The right answer is ${formatPop(POP[answer])} 🙂`;
+  }
+  options = shuffle(options);
+
+  $("count").textContent = `Question ${index + 1} / ${ROUNDS}`;
+  $("score").textContent = `⭐ ${score}`;
+  $("progress").style.width = `${(index / ROUNDS) * 100}%`;
+  $("flag").src = flagUrl(answer);
+  $("question").textContent = question;
+  $("feedback").textContent = "";
+
+  // Preload the next flag so it appears instantly
+  if (questions[index + 1]) new Image().src = flagUrl(questions[index + 1].code);
+
+  const box = $("choices");
+  box.innerHTML = "";
+  for (const code of options) {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.textContent = label(code);
+    btn.dataset.correct = code === answer;
+    btn.onclick = () => pick(btn, code === answer, oops);
+    box.appendChild(btn);
+  }
+}
+
+function pick(btn, isRight, oops) {
+  const buttons = [...$("choices").children];
+  buttons.forEach(b => b.disabled = true);
+
+  if (isRight) {
+    score++;
+    btn.classList.add("correct");
+    $("feedback").textContent = CHEERS[Math.floor(Math.random() * CHEERS.length)];
+  } else {
+    btn.classList.add("wrong");
+    buttons.find(b => b.dataset.correct === "true").classList.add("correct");
+    $("feedback").textContent = oops;
+  }
+  $("score").textContent = `⭐ ${score}`;
+  // Move on automatically; wrong answers stay a bit longer so the right one can be seen
+  setTimeout(next, isRight ? 1200 : 2600);
+}
+
+function next() {
+  index++;
+  if (index < ROUNDS) show();
+  else finish();
+}
+
+function finish() {
+  $("progress").style.width = "100%";
+  $("game").hidden = true;
+  $("end").hidden = false;
+  const starCount = score >= 9 ? 3 : score >= 6 ? 2 : score >= 3 ? 1 : 0;
+  $("stars").textContent = "⭐".repeat(starCount) + "☆".repeat(3 - starCount);
+  $("end-title").textContent =
+    starCount === 3 ? "World Champion! 🏆" :
+    starCount === 2 ? "Well done! 🎉" :
+    starCount === 1 ? "Nice try! 👍" : "Keep practicing! 💪";
+  $("end-text").textContent = `You got ${score} out of ${ROUNDS} questions right!`;
+}
+
+$("again").onclick = start;
+start();
+</script>
+</body>
+</html>
