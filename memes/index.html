@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M12 9l12 7-12 7z' fill='%23ffde00'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    color: #eee;
+    font-family: Inter, system-ui, sans-serif;
+    padding: 48px 16px 32px;
+  }
+  header, main, footer { max-width: 760px; margin: 0 auto; }
+  h1 {
+    font-family: Anton, Impact, sans-serif;
+    font-size: clamp(3rem, 12vw, 6rem);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    color: #fff;
+    -webkit-text-stroke: 2px #000;
+    text-shadow: 4px 4px 0 #ffde00;
+  }
+  header p { margin: 12px 0 40px; color: #999; }
+  main { display: flex; flex-direction: column; gap: 48px; }
+  figure h2 {
+    font-family: Anton, Impact, sans-serif;
+    font-weight: 400;
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 12px;
+  }
+  .video {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000 center / cover no-repeat;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 0;
+    width: 100%;
+    cursor: pointer;
+    display: block;
+  }
+  .video::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 72px; height: 50px;
+    transform: translate(-50%, -50%);
+    border-radius: 12px;
+    background: #ffde00 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5v14l11-7z' fill='%23111'/%3E%3C/svg%3E") center / 32px no-repeat;
+    transition: transform .15s;
+  }
+  .video:hover::after, .video:focus-visible::after { transform: translate(-50%, -50%) scale(1.1); }
+  .video:focus-visible { outline: 3px solid #ffde00; outline-offset: 3px; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .video.playing { cursor: default; }
+  .video.playing::after { display: none; }
+  figcaption { margin-top: 8px; font-size: 0.85rem; }
+  figcaption a { color: #888; }
+  footer { margin-top: 64px; color: #777; font-size: 0.85rem; }
+  footer a { color: #ffde00; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Memes</h1>
+  <p>Een verzameling meme-video's.</p>
+</header>
+
+<main id="memes"></main>
+
+<footer>
+  Part of <a href="../">Small &amp; Stateless</a> · videos play from YouTube
+</footer>
+
+<script>
+  // Add new memes here: title + YouTube video id (the part after youtu.be/).
+  const memes = [
+    { title: "Helemaal de weg kwijt", id: "Rv4-pR2VQIo" },
+  ];
+
+  const list = document.getElementById("memes");
+  for (const { title, id } of memes) {
+    const fig = document.createElement("figure");
+    fig.id = id;
+
+    const h2 = document.createElement("h2");
+    h2.textContent = title;
+
+    // Thumbnail first, real player on click — keeps a long page light.
+    const btn = document.createElement("button");
+    btn.className = "video";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Speel af: " + title);
+    btn.style.backgroundImage = `url(https://i.ytimg.com/vi/${id}/hqdefault.jpg)`;
+    btn.addEventListener("click", () => {
+      const player = document.createElement("div");
+      player.className = "video playing";
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+      iframe.title = title;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      iframe.allowFullscreen = true;
+      player.appendChild(iframe);
+      btn.replaceWith(player);
+    });
+
+    const cap = document.createElement("figcaption");
+    cap.innerHTML = `<a href="https://youtu.be/${id}" target="_blank" rel="noopener">op YouTube ↗</a>`;
+
+    fig.append(h2, btn, cap);
+    list.appendChild(fig);
+  }
+</script>
+
+</body>
+</html>
